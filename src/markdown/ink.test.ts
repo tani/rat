@@ -25,7 +25,7 @@ Deno.test("renderMarkdownToInkText applies unicode-rich inline and block decorat
       "",
       "plain **bold** text",
       "",
-      "    const x = \"**keep**\";",
+      '    const x = "**keep**";',
     ].join("\n"),
   );
   assert(out.includes("▌"), `expected heading marker: ${out}`);
@@ -39,7 +39,7 @@ Deno.test("renderMarkdownToInkText applies unicode-rich inline and block decorat
   assert(out.includes("• item"), `expected bullet symbol: ${out}`);
   assert(out.includes("▌ quote"), `expected blockquote symbol: ${out}`);
   assert(
-    out.includes("    const x = \"**keep**\";"),
+    out.includes('    const x = "**keep**";'),
     `code block content should be indented: ${out}`,
   );
 });

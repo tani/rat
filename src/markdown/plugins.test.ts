@@ -9,9 +9,9 @@ import { visit } from "unist-util-visit";
 
 import {
   remarkPrettier,
-  remarkShortenLinks,
   remarkRenderMath,
   remarkRenderMermaidAscii,
+  remarkShortenLinks,
 } from "./plugins.ts";
 
 function assert(condition: unknown, message: string): asserts condition {

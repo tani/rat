@@ -110,9 +110,18 @@ Deno.test("renderMarkdown decodes numeric HTML entities from math renderer", asy
 Deno.test("renderMarkdown increments ordered list numbering", async () => {
   const input = ["1. one", "1. two", "1. three", ""].join("\n");
   const out = await renderMarkdown(input, 80);
-  assert(out.markdown.includes("1. one"), `expected first item: ${out.markdown}`);
-  assert(out.markdown.includes("2. two"), `expected second item: ${out.markdown}`);
-  assert(out.markdown.includes("3. three"), `expected third item: ${out.markdown}`);
+  assert(
+    out.markdown.includes("1. one"),
+    `expected first item: ${out.markdown}`,
+  );
+  assert(
+    out.markdown.includes("2. two"),
+    `expected second item: ${out.markdown}`,
+  );
+  assert(
+    out.markdown.includes("3. three"),
+    `expected third item: ${out.markdown}`,
+  );
 });
 
 Deno.test("renderMarkdown emits indented code blocks without fences", async () => {
@@ -127,7 +136,10 @@ Deno.test("renderMarkdown emits indented code blocks without fences", async () =
     "",
   ].join("\n");
   const out = await renderMarkdown(input, 80);
-  assert(!out.markdown.includes("```"), `fences should be removed: ${out.markdown}`);
+  assert(
+    !out.markdown.includes("```"),
+    `fences should be removed: ${out.markdown}`,
+  );
   assert(
     out.markdown.includes("    export const x = 1;"),
     `ts code should be indented: ${out.markdown}`,

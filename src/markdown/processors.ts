@@ -7,9 +7,9 @@ import { unified } from "unified";
 import {
   remarkNormalizeCodeBlocks,
   remarkPrettier,
-  remarkShortenLinks,
   remarkRenderMath,
   remarkRenderMermaidAscii,
+  remarkShortenLinks,
 } from "./plugins.ts";
 import {
   type PositionMapEntry,

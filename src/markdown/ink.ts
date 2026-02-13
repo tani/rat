@@ -21,7 +21,9 @@ function isTableSeparator(line: string): boolean {
 function renderTableGrid(rows: string[][]): string {
   if (!rows.length) return "";
   const cols = Math.max(...rows.map((r) => r.length));
-  const grid = rows.map((r) => Array.from({ length: cols }, (_, i) => r[i] ?? ""));
+  const grid = rows.map((r) =>
+    Array.from({ length: cols }, (_, i) => r[i] ?? "")
+  );
   const widths = Array.from(
     { length: cols },
     (_, i) => Math.max(...grid.map((r) => r[i].length), 1),
@@ -42,22 +44,34 @@ function decorateInline(text: string): string {
   return parts.map((part) => {
     if (part.startsWith("`") && part.endsWith("`")) return part;
     return part
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, dest) =>
-        `${styleText("underline", String(label))} ${
-          styleText("underline", String(dest))
-        }`
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        (_, label, dest) =>
+          `${styleText("underline", String(label))} ${
+            styleText("underline", String(dest))
+          }`,
       )
-      .replace(/\[([^\]]+)\]\[([^\]]+)\]/g, (_, label, ref) =>
-        `${styleText("underline", String(label))} [${String(ref)}]`
+      .replace(
+        /\[([^\]]+)\]\[([^\]]+)\]/g,
+        (_, label, ref) =>
+          `${styleText("underline", String(label))} [${String(ref)}]`,
       )
-      .replace(/(\*\*\*|___)(.+?)\1/g, (_, __, inner) =>
-        styleText(["bold", "italic"], String(inner))
+      .replace(
+        /(\*\*\*|___)(.+?)\1/g,
+        (_, __, inner) => styleText(["bold", "italic"], String(inner)),
       )
-      .replace(/(\*\*|__)(.+?)\1/g, (_, __, inner) =>
-        styleText("bold", String(inner))
+      .replace(
+        /(\*\*|__)(.+?)\1/g,
+        (_, __, inner) => styleText("bold", String(inner)),
       )
-      .replace(/\*([^*\n]+)\*/g, (_, inner) => styleText("italic", String(inner)))
-      .replace(/~~(.+?)~~/g, (_, inner) => styleText("strikethrough", String(inner)));
+      .replace(
+        /\*([^*\n]+)\*/g,
+        (_, inner) => styleText("italic", String(inner)),
+      )
+      .replace(
+        /~~(.+?)~~/g,
+        (_, inner) => styleText("strikethrough", String(inner)),
+      );
   }).join("");
 }
 
@@ -75,20 +89,29 @@ function decorateHeading(line: string): string {
 function decorateLine(line: string): string {
   const heading = decorateHeading(line);
   if (heading !== line) return heading;
-  if (/^\s*>\s?/.test(line)) return decorateInline(line.replace(/^\s*>\s?/, "▌ "));
+  if (/^\s*>\s?/.test(line)) {
+    return decorateInline(line.replace(/^\s*>\s?/, "▌ "));
+  }
   if (/^\s*([-*])\s+\[(x|X| )\]\s+/.test(line)) {
-    return line.replace(/^\s*([-*])\s+\[(x|X| )\]\s+(.+)$/, (_, __, checked, rest) =>
-      `${checked.toLowerCase() === "x" ? "☑" : "☐"} ${decorateInline(String(rest))}`
+    return line.replace(
+      /^\s*([-*])\s+\[(x|X| )\]\s+(.+)$/,
+      (_, __, checked, rest) =>
+        `${checked.toLowerCase() === "x" ? "☑" : "☐"} ${
+          decorateInline(String(rest))
+        }`,
     );
   }
   if (/^\s*[-*+]\s+/.test(line)) {
-    return line.replace(/^(\s*)[-*+]\s+(.+)$/, (_, indent, rest) =>
-      `${String(indent)}• ${decorateInline(String(rest))}`
+    return line.replace(
+      /^(\s*)[-*+]\s+(.+)$/,
+      (_, indent, rest) => `${String(indent)}• ${decorateInline(String(rest))}`,
     );
   }
   if (/^\s*\d+\.\s+/.test(line)) {
-    return line.replace(/^(\s*)(\d+)\.\s+(.+)$/, (_, indent, n, rest) =>
-      `${String(indent)}${n}. ${decorateInline(String(rest))}`
+    return line.replace(
+      /^(\s*)(\d+)\.\s+(.+)$/,
+      (_, indent, n, rest) =>
+        `${String(indent)}${n}. ${decorateInline(String(rest))}`,
     );
   }
   if (/^\s*([*-]\s*){3,}$/.test(line)) return "─".repeat(40);

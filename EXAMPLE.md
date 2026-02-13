@@ -14,11 +14,13 @@ This document exercises most syntax supported by `mdd`.
 
 ## Text Styles
 
-Plain text with **bold**, *italic*, ~~strikethrough~~, and `inline code`.
+Plain text with **bold**, _italic_, ~~strikethrough~~, and `inline code`.
 
-Math inline examples: $E=mc^2$, $\alpha + \beta \to \gamma$, and $\int_0^1 x^2 dx$.
+Math inline examples: $E=mc^2$, $\alpha + \beta \to \gamma$, and
+$\int_0^1 x^2 dx$.
 
 Link styles:
+
 - Inline link: [OpenAI](https://openai.com)
 - Reference link: [Deno docs][deno]
 
@@ -36,14 +38,14 @@ Link styles:
 3. Ordered item three
 
 Task list:
+
 - [x] Parse markdown
 - [x] Render math
 - [ ] Improve diagram theme
 
 ## Blockquote
 
-> This is a blockquote.
-> It spans multiple lines.
+> This is a blockquote. It spans multiple lines.
 
 ## Code Blocks
 
@@ -59,11 +61,11 @@ deno run -A src/mdd.ts EXAMPLE.md
 
 ## Table
 
-| Feature | Status | Notes |
-|---|:---:|---|
-| GFM table | yes | column alignment should remain |
-| Math | yes | rendered via tex renderer or fallback |
-| Mermaid | yes | converted to ASCII block |
+| Feature   | Status | Notes                                 |
+| --------- | :----: | ------------------------------------- |
+| GFM table |  yes   | column alignment should remain        |
+| Math      |  yes   | rendered via tex renderer or fallback |
+| Mermaid   |  yes   | converted to ASCII block              |
 
 ## Horizontal Rule
 
@@ -109,4 +111,5 @@ Use escaped pipes in table-like text: a \| b \| c.
 
 ## End
 
-Final paragraph with enough text to trigger wrapping for narrow terminal widths and verify that line mapping still behaves reasonably across formatted output.
+Final paragraph with enough text to trigger wrapping for narrow terminal widths
+and verify that line mapping still behaves reasonably across formatted output.

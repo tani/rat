@@ -12,11 +12,13 @@ const texRenderer: ((latex: string) => string) | null = (() => {
 
 function decodeNumericEntities(value: string): string {
   return value
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-      String.fromCodePoint(Number.parseInt(String(hex), 16))
+    .replace(
+      /&#x([0-9a-fA-F]+);/g,
+      (_, hex) => String.fromCodePoint(Number.parseInt(String(hex), 16)),
     )
-    .replace(/&#([0-9]+);/g, (_, dec) =>
-      String.fromCodePoint(Number.parseInt(String(dec), 10))
+    .replace(
+      /&#([0-9]+);/g,
+      (_, dec) => String.fromCodePoint(Number.parseInt(String(dec), 10)),
     );
 }
 

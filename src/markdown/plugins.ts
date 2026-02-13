@@ -89,13 +89,14 @@ export const remarkRenderMermaidAscii: Plugin<[], Root> =
     });
   };
 
-export const remarkNormalizeCodeBlocks: Plugin<[], Root> = () => (tree: Root) => {
-  visit(tree as Nodes, "code", (node) => {
-    const code = node as Code;
-    code.lang = null;
-    code.meta = null;
-  });
-};
+export const remarkNormalizeCodeBlocks: Plugin<[], Root> =
+  () => (tree: Root) => {
+    visit(tree as Nodes, "code", (node) => {
+      const code = node as Code;
+      code.lang = null;
+      code.meta = null;
+    });
+  };
 
 export const remarkShortenLinks: Plugin<[], Root> = () => (tree: Root) => {
   visit(tree as Nodes, "link", (node) => {
