@@ -1,4 +1,9 @@
 {
+  "name": "@tani/mdd",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/mdd.ts"
+  },
   "entrypoint": "./src/mdd.ts",
   "imports": {
     "beautiful-mermaid": "npm:beautiful-mermaid@0.1.3",
