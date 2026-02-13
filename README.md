@@ -2,6 +2,9 @@
 
 Minimal terminal markdown preview service for `libtexprintf`.
 
+<img width="2394" height="2086" alt="image" src="https://github.com/user-attachments/assets/6a61349a-3f51-4c72-8c3a-c8a3af9ae83b" />
+
+
 ## Features
 
 - Markdown transform pipeline (GFM, math, mermaid, prettier)
