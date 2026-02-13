@@ -20,21 +20,43 @@ function assert(condition: unknown, message: string): asserts condition {
 
 Deno.test("remarkRenderMath rewrites inline and block math nodes", () => {
   const parser = unified().use(remarkParse).use(remarkMath);
-  const tree = parser.parse("inline $\\alpha$\\n\\n$$\\beta$$\\n") as Root;
+  const tree = parser.parse(`inline $\\alpha$
+
+$$
+\\beta
+$$
+`) as Root;
   const transformed = unified().use(remarkRenderMath).runSync(tree) as Root;
 
-  const textValues: string[] = [];
+  const inlineValues: string[] = [];
+  const blockValues: string[] = [];
   visit(transformed, "text", (node) => {
-    textValues.push(String((node as { value?: string }).value ?? ""));
+    inlineValues.push(String((node as { value?: string }).value ?? ""));
   });
-  const joined = textValues.join("\n");
-  const inlineText = textValues.join("");
+  visit(transformed, "code", (node) => {
+    blockValues.push(String((node as { value?: string }).value ?? ""));
+  });
+  const inlineText = inlineValues.join("");
   assert(
     inlineText.includes("α"),
     `inline math should be replaced with unicode text: ${inlineText}`,
   );
-  const blockText = joined;
-  assert(blockText.includes("β"), `block math should render: ${blockText}`);
+  assert(
+    blockValues.length > 0,
+    "block math should be converted to code node",
+  );
+
+  const markdown = String(
+    unified().use(remarkStringify, { fences: true }).stringify(transformed),
+  );
+  assert(
+    markdown.includes("α"),
+    `inline math should be plain text: ${markdown}`,
+  );
+  assert(
+    markdown.includes("```"),
+    `block math should be wrapped in fenced code when fences are enabled: ${markdown}`,
+  );
 });
 
 Deno.test("remarkRenderMermaidAscii processes mermaid code blocks safely", async () => {

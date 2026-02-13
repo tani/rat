@@ -1,4 +1,11 @@
-import type { Code, Definition, Link, Nodes, Root, RootContent } from "mdast";
+import type {
+  Code,
+  Definition,
+  Link,
+  Nodes,
+  Root,
+  RootContent,
+} from "mdast";
 import { renderMermaidAscii } from "beautiful-mermaid";
 import { toString } from "mdast-util-to-string";
 import prettier from "prettier";
@@ -64,13 +71,10 @@ export const remarkRenderMath: Plugin<[], Root> = () => (tree: Root) => {
     const src = nodeValue(node as RootContent & { value?: unknown });
     const rendered = renderBlockMath(src).replace(/\$/g, "\\$");
     replaceChildAt(parent, index, {
-      type: "paragraph",
-      children: [
-        {
-          type: "text",
-          value: rendered,
-        },
-      ],
+      type: "code",
+      lang: null,
+      meta: null,
+      value: rendered,
     } as RootContent);
   });
 };
