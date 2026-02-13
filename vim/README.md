@@ -32,4 +32,3 @@ Copy `vim/plugin/mdd.vim` into your Vim runtime path plugin directory.
 ## Requirements
 
 - `curl`
-- `base64`

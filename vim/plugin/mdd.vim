@@ -29,18 +29,28 @@ function! s:TargetBuffer() abort
   return &filetype ==# 'markdown' || expand('%:e') =~# '^\%(md\|markdown\|mdx\)$'
 endfunction
 
+function! s:BufferBase64() abort
+  let l:text = join(getline(1, '$'), "\n")
+  if exists('*base64_encode')
+    return base64_encode(l:text)
+  endif
+  if has('nvim') && exists('*luaeval')
+    return luaeval('vim.base64.encode(_A)', l:text)
+  endif
+  let l:tmp = tempname()
+  call writefile(getline(1, '$'), l:tmp)
+  let l:out = substitute(system('base64 < ' . shellescape(l:tmp) . " | tr -d '\\n'"), '\n\+$', '', '')
+  call delete(l:tmp)
+  return l:out
+endfunction
+
 function! s:BuildRequest(line_num) abort
   let l:url = get(g:, 'mdd_server_url', 'http://127.0.0.1:8787/render')
   let l:timeout = max([1, float2nr(get(g:, 'mdd_sync_timeout_seconds', 2))])
   let l:base = 'curl -sS -o /dev/null --max-time ' . l:timeout
         \ . ' --get ' . shellescape(l:url)
         \ . ' --data-urlencode ' . shellescape('l=' . a:line_num)
-  let l:tmp = tempname()
-  call writefile(getline(1, '$'), l:tmp)
-  return 'b64=$(base64 < ' . shellescape(l:tmp) . " | tr -d '\\n'); "
-        \ . l:base
-        \ . ' --data-urlencode "b=${b64}"'
-        \ . '; rm -f ' . shellescape(l:tmp)
+  return l:base . ' --data-urlencode ' . shellescape('b=' . s:BufferBase64())
 endfunction
 
 function! s:Dispatch(cmd) abort
@@ -55,7 +65,7 @@ function! s:SyncNow() abort
   if !get(g:, 'mdd_sync_enabled', 1) || !s:TargetBuffer()
     return
   endif
-  if !executable('curl') || !executable('base64')
+  if !executable('curl')
     return
   endif
 

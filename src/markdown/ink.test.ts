@@ -8,10 +8,27 @@ Deno.test("renderMarkdownToInkText converts markdown table to box grid text", ()
   const out = renderMarkdownToInkText(
     "| A | B |\n|---|---|\n| 1 | 2 |\n",
   );
-  assert(out.includes("┌"), `expected table border: ${out}`);
+  assert(
+    out.includes("╭") || out.includes("┌"),
+    `expected table border: ${out}`,
+  );
   assert(out.includes("A"), `expected header text: ${out}`);
   assert(out.includes("1"), `expected row text: ${out}`);
-  assert(out.includes("┘") || out.includes("└"), `expected table end: ${out}`);
+  assert(
+    out.includes("┘") || out.includes("└") || out.includes("╯") ||
+      out.includes("╰"),
+    `expected table end: ${out}`,
+  );
+});
+
+Deno.test("renderMarkdownToInkText keeps escaped pipes inside table cells", () => {
+  const out = renderMarkdownToInkText(
+    "| Lang | Type |\n|---|---|\n| ts | A \\| B |\n",
+  );
+  assert(
+    out.includes("A ¦ B"),
+    `escaped pipe should stay inside one cell: ${out}`,
+  );
 });
 
 Deno.test("renderMarkdownToInkText applies unicode-rich inline and block decoration", () => {

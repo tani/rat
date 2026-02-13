@@ -1,43 +1,9 @@
 import { styleText } from "node:util";
-
-const inlineFlat = (text: string): string =>
-  text.replace(/\s*\n+\s*/g, " ").replace(/\s+/g, " ").trim();
-const cellText = (text: string): string => inlineFlat(text).replace(/\|/g, "¦");
-
-function parseTableRow(line: string): string[] | null {
-  if (!line.includes("|")) return null;
-  let text = line.trim();
-  if (!text.length) return null;
-  if (text.startsWith("|")) text = text.slice(1);
-  if (text.endsWith("|")) text = text.slice(0, -1);
-  return text.split("|").map((part) => cellText(part.trim()));
-}
-
-function isTableSeparator(line: string): boolean {
-  const row = parseTableRow(line);
-  return !!row?.length && row.every((part) => /^:?-{3,}:?$/.test(part));
-}
-
-function renderTableGrid(rows: string[][]): string {
-  if (!rows.length) return "";
-  const cols = Math.max(...rows.map((r) => r.length));
-  const grid = rows.map((r) =>
-    Array.from({ length: cols }, (_, i) => r[i] ?? "")
-  );
-  const widths = Array.from(
-    { length: cols },
-    (_, i) => Math.max(...grid.map((r) => r[i].length), 1),
-  );
-  const border = (l: string, m: string, r: string): string =>
-    `${l}${widths.map((w) => "─".repeat(w + 2)).join(m)}${r}`;
-  const rowLine = (cells: string[]): string =>
-    `│ ${cells.map((c, i) => c.padEnd(widths[i])).join(" │ ")} │`;
-  const lines = [border("┌", "┬", "┐"), rowLine(grid[0])];
-  if (grid.length > 1) lines.push(border("├", "┼", "┤"));
-  for (let i = 1; i < grid.length; i++) lines.push(rowLine(grid[i]));
-  lines.push(border("└", "┴", "┘"));
-  return `${lines.join("\n")}\n`;
-}
+import {
+  parseMarkdownTable,
+  renderMarkdownTable,
+  type TableBorderStyle,
+} from "./table.ts";
 
 function decorateInline(text: string): string {
   const parts = text.split(/(`[^`]*`)/g);
@@ -120,7 +86,12 @@ function decorateLine(line: string): string {
 
 export function renderMarkdownToInkText(
   markdown: string,
-  options?: { trailingNewline?: boolean },
+  options?: {
+    trailingNewline?: boolean;
+    tableStyle?: TableBorderStyle;
+    tableMaxWidth?: number;
+    tableCellMaxWidth?: number;
+  },
 ): string {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const out: string[] = [];
@@ -129,18 +100,16 @@ export function renderMarkdownToInkText(
       out.push(lines[i]);
       continue;
     }
-    const header = parseTableRow(lines[i]);
-    if (header && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
-      const rows = [header];
-      i += 2;
-      while (i < lines.length) {
-        const row = parseTableRow(lines[i]);
-        if (!row) break;
-        rows.push(row);
-        i++;
-      }
-      out.push(renderTableGrid(rows).trimEnd());
-      i -= 1;
+    const table = parseMarkdownTable(lines, i);
+    if (table) {
+      out.push(
+        renderMarkdownTable(table, {
+          style: options?.tableStyle,
+          maxWidth: options?.tableMaxWidth,
+          maxCellWidth: options?.tableCellMaxWidth,
+        }).trimEnd(),
+      );
+      i = table.endIndex;
       continue;
     }
     out.push(decorateLine(lines[i]));
