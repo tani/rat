@@ -1,6 +1,6 @@
 import unicodeit from "unicodeit";
-import { createRendererFromExports } from "../../libtexprintf/libtexprintf.js";
-import * as texWasm from "../../libtexprintf/libtexprintf.wasm";
+import { createRendererFromExports } from "libtexprintf/libtexprintf.js";
+import * as texWasm from "libtexprintf/libtexprintf.wasm";
 
 const texRenderer: ((latex: string) => string) | null = (() => {
   try {
