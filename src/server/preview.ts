@@ -95,7 +95,7 @@ function makeViewport(
   const clipped = lines.slice(startLine - 1, endLine);
 
   return {
-    text: clipped.join("\n") + "\n",
+    text: clipped.join("\n"),
     startLine,
     endLine,
   };

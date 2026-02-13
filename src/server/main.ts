@@ -48,7 +48,9 @@ export function main() {
 
     try {
       await refresh(parsed.source, parsed.cursor.line, (text) => {
-        const rendered = renderMarkdownToInkText(text);
+        const rendered = renderMarkdownToInkText(text, {
+          trailingNewline: false,
+        });
         render(/\S/.test(rendered) ? rendered : "");
       });
       res.statusCode = 204;

@@ -118,7 +118,10 @@ function decorateLine(line: string): string {
   return decorateInline(line);
 }
 
-export function renderMarkdownToInkText(markdown: string): string {
+export function renderMarkdownToInkText(
+  markdown: string,
+  options?: { trailingNewline?: boolean },
+): string {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
@@ -143,5 +146,7 @@ export function renderMarkdownToInkText(markdown: string): string {
     out.push(decorateLine(lines[i]));
   }
   const text = out.join("\n");
+  const trailingNewline = options?.trailingNewline ?? true;
+  if (!trailingNewline) return text;
   return text.endsWith("\n") ? text : `${text}\n`;
 }

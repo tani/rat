@@ -29,8 +29,8 @@ Deno.test("buildPreview returns mapped viewport and output line", async () => {
     "viewport range invalid",
   );
   assert(
-    preview.viewport.text.endsWith("\n"),
-    "viewport text should end with newline",
+    !preview.viewport.text.endsWith("\n"),
+    "viewport text should not end with newline",
   );
   assert(
     preview.viewport.text.includes("α"),
