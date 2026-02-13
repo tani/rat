@@ -1,0 +1,24 @@
+{
+  "entrypoint": "./src/mdd.ts",
+  "imports": {
+    "beautiful-mermaid": "npm:beautiful-mermaid@0.1.3",
+    "mdast": "npm:@types/mdast@4.0.4",
+    "mdast-util-to-string": "npm:mdast-util-to-string@4.0.0",
+    "prettier": "npm:prettier@3.8.1",
+    "remark-gfm": "npm:remark-gfm@4.0.1",
+    "remark-math": "npm:remark-math@6.0.0",
+    "remark-parse": "npm:remark-parse@11.0.0",
+    "remark-stringify": "npm:remark-stringify@11.0.0",
+    "unicodeit": "npm:unicodeit@0.7.5",
+    "unified": "npm:unified@11.0.5",
+    "unist-util-visit": "npm:unist-util-visit@5.1.0",
+    "wasi_snapshot_preview1": "./src/server/wasi_snapshot_preview1.ts"
+  },
+  "tasks": {
+    "start": "deno run -A src/mdd.ts --server",
+    "test": "deno test -A \"src/**/*.test.ts\"",
+    "check": "deno check src/**/*.ts && deno lint src/**/*.ts",
+    "fmt": "deno fmt",
+    "lint": "deno lint"
+  }
+}
