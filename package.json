@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "simple-git-hooks",
+    "prepare": "git config --local core.hooksPath .githooks && chmod +x .githooks/pre-commit",
     "lint": "oxlint -D suspicious -D pedantic -D perf --deny-warnings .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
@@ -26,10 +26,6 @@
     "@types/unist": "^3.0.3",
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
-    "simple-git-hooks": "^2.13.1",
     "typescript": "^5.9.2"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "bun run typecheck && bun run lint && bun run format:check && bun run test"
   }
 }
