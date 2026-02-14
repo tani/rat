@@ -8,7 +8,12 @@ import remarkUnicodeMath from "./index";
 test("remark-unicode-math: converts inline math to inline code with unicodeit", async () => {
   const input = String.raw`Inline $\alpha + \beta$ test.`;
   const out = String(
-    await unified().use(remarkParse).use(remarkMath).use(remarkUnicodeMath).use(remarkStringify).process(input),
+    await unified()
+      .use(remarkParse)
+      .use(remarkMath)
+      .use(remarkUnicodeMath)
+      .use(remarkStringify)
+      .process(input),
   );
 
   expect(out).toContain("`α + β`");

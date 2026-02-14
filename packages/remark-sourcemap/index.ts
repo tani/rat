@@ -105,7 +105,10 @@ function buildLcsTable(generated: NodeRecord[], current: NodeRecord[]): Uint32Ar
       if (generated[i - 1]?.signature === current[j - 1]?.signature) {
         table[idx] = tableAt(table, (i - 1) * cols + (j - 1)) + 1;
       } else {
-        table[idx] = Math.max(tableAt(table, (i - 1) * cols + j), tableAt(table, i * cols + (j - 1)));
+        table[idx] = Math.max(
+          tableAt(table, (i - 1) * cols + j),
+          tableAt(table, i * cols + (j - 1)),
+        );
       }
     }
   }

@@ -46,7 +46,9 @@ function renderTable(table: Table): string {
   };
 
   const renderRow = (cells: string[]) => {
-    const rendered = cells.map((cell, col) => ` ${pad(cell, widths[col] ?? 1, align[col] ?? null)} `);
+    const rendered = cells.map(
+      (cell, col) => ` ${pad(cell, widths[col] ?? 1, align[col] ?? null)} `,
+    );
     return `│${rendered.join("│")}│`;
   };
 
