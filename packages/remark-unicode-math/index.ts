@@ -31,7 +31,7 @@ export type RemarkUnicodeMathOptions = {
 };
 let rendererPromise: Promise<Renderer> | undefined;
 
-async function getRenderer(): Promise<Renderer> {
+function getRenderer(): Promise<Renderer> {
   if (!rendererPromise) {
     rendererPromise = (async () => {
       const wasmUrl = new URL("./libtexprintf/libtexprintf.wasm", import.meta.url);

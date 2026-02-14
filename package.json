@@ -5,10 +5,11 @@
     "packages/*"
   ],
   "scripts": {
-    "lint": "oxlint .",
+    "lint": "oxlint -D suspicious -D pedantic --deny-warnings .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
     "test": "bun test packages/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "test:sourcemap": "bun test packages/remark-sourcemap/index.test.ts",
     "test:inline": "bun test packages/remark-unicode-inline/index.test.ts",
     "test:math": "bun test packages/remark-unicode-math/index.test.ts",
@@ -20,6 +21,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/mdast": "^4.0.4",
+    "@types/unist": "^3.0.3",
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
     "typescript": "^5.9.2"

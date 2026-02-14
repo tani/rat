@@ -46,16 +46,16 @@ function renderTable(table: Table): string {
   };
 
   const renderRow = (cells: string[]) => {
-    const rendered = cells.map((cell, col) => ` ${pad(cell, widths[col], align[col])} `);
+    const rendered = cells.map((cell, col) => ` ${pad(cell, widths[col] ?? 1, align[col] ?? null)} `);
     return `│${rendered.join("│")}│`;
   };
 
   const out: string[] = [];
   out.push(horiz("┌", "┬", "┐"));
-  out.push(renderRow(matrix[0]));
+  out.push(renderRow(matrix[0] ?? []));
   out.push(horiz("├", "┼", "┤"));
   for (let i = 1; i < matrix.length; i += 1) {
-    out.push(renderRow(matrix[i]));
+    out.push(renderRow(matrix[i] ?? []));
   }
   out.push(horiz("└", "┴", "┘"));
 

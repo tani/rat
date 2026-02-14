@@ -9,6 +9,8 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/mdast": "^4.0.4",
+        "@types/unist": "^3.0.3",
         "oxfmt": "^0.32.0",
         "oxlint": "^1.47.0",
         "typescript": "^5.9.2",

@@ -135,6 +135,26 @@ function flattenInlineChildren(parent: Parent): void {
   parent.children = [textNode(rendered)] as Parent["children"];
 }
 
+function transformContainerChildren<T extends { children: unknown[] }>(node: T): T {
+  node.children = node.children.map(
+    (child) => transformNode(child as RootContent) as (typeof node.children)[number],
+  );
+  return node;
+}
+
+function transformTableNode(table: Table): Table {
+  table.children = table.children.map((row) => {
+    const r = row as TableRow;
+    r.children = r.children.map((cell) => {
+      const c = cell as TableCell;
+      flattenInlineChildren(c);
+      return c;
+    });
+    return r;
+  });
+  return table;
+}
+
 function transformNode(node: RootContent): RootContent {
   switch (node.type) {
     case "paragraph": {
@@ -148,31 +168,19 @@ function transformNode(node: RootContent): RootContent {
       return n;
     }
     case "blockquote": {
-      const n = node as Blockquote;
-      n.children = n.children.map((child) => transformNode(child as RootContent));
-      return n;
+      return transformContainerChildren(node as Blockquote);
     }
     case "list": {
       const n = node as List;
       n.children = n.children.map((item) => {
         const li = item as ListItem;
-        li.children = li.children.map((child) => transformNode(child as RootContent));
+        transformContainerChildren(li);
         return li;
       });
       return n;
     }
     case "table": {
-      const table = node as Table;
-      table.children = table.children.map((row) => {
-        const r = row as TableRow;
-        r.children = r.children.map((cell) => {
-          const c = cell as TableCell;
-          flattenInlineChildren(c);
-          return c;
-        });
-        return r;
-      });
-      return table;
+      return transformTableNode(node as Table);
     }
     case "html":
     case "code":
