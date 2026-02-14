@@ -1,0 +1,18 @@
+{
+  "name": "@mdd/remark-unicode-math",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unicodeit": "^0.7.5",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0"
+  }
+}

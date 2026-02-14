@@ -1,0 +1,22 @@
+{
+  "name": "@mdd/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@mdd/remark-sourcemap": "workspace:*",
+    "@mdd/remark-unicode-inline": "workspace:*",
+    "@mdd/remark-unicode-math": "workspace:*",
+    "@mdd/remark-unicode-mermaid": "workspace:*",
+    "@mdd/remark-unicode-table": "workspace:*",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5"
+  }
+}

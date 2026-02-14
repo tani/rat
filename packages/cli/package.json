@@ -1,0 +1,12 @@
+{
+  "name": "@mdd/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "mdd": "./index.ts"
+  },
+  "dependencies": {
+    "@mdd/core": "workspace:*"
+  }
+}
