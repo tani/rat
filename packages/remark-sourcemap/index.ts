@@ -21,8 +21,8 @@ export type RemarkSourcemapRange = {
 
 export type RemarkSourcemapSegment = {
   nodeType: string;
-  generated: RemarkSourcemapRange;
-  source: RemarkSourcemapRange;
+  output: RemarkSourcemapRange;
+  input: RemarkSourcemapRange;
 };
 
 export type RemarkSourcemapData = {
@@ -166,8 +166,8 @@ function emitLineMap(currentTree: Root, generatedTree: Root, file: VFile): void 
 
     segments.push({
       nodeType: generated.type,
-      generated: toSourcemapRange(genPos),
-      source: toSourcemapRange(curPos),
+      output: toSourcemapRange(genPos),
+      input: toSourcemapRange(curPos),
     });
   }
 

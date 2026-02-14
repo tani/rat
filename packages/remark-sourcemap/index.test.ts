@@ -12,15 +12,15 @@ function readSourcemap(file: VFile): RemarkSourcemapData {
   return data;
 }
 
-function hasLineMapping(map: RemarkSourcemapData, generatedLine: number, sourceLine: number): boolean {
+function hasLineMapping(map: RemarkSourcemapData, outputLine: number, inputLine: number): boolean {
   return map.segments.some((segment) => {
-    const gen = segment.generated;
-    const src = segment.source;
+    const out = segment.output;
+    const input = segment.input;
     return (
-      generatedLine >= gen.start.line &&
-      generatedLine <= gen.end.line &&
-      sourceLine >= src.start.line &&
-      sourceLine <= src.end.line
+      outputLine >= out.start.line &&
+      outputLine <= out.end.line &&
+      inputLine >= input.start.line &&
+      inputLine <= input.end.line
     );
   });
 }
