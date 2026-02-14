@@ -68,6 +68,10 @@ describe("vim preview plugin", () => {
         ["nvim", "-u", "NONE", "-i", "NONE", "-n", "--headless", "-S", scriptPath],
         {
           cwd: tempDir,
+          env: {
+            ...process.env,
+            PATH: `${tempDir}:${process.env.PATH ?? ""}`,
+          },
           stdout: "pipe",
           stderr: "pipe",
         },

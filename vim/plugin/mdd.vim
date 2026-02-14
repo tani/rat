@@ -1,7 +1,7 @@
-if exists('g:loaded_mdd_preview')
+if exists('g:loaded_mdd_plugin')
   finish
 endif
-let g:loaded_mdd_preview = 1
+let g:loaded_mdd_plugin = 1
 
 if &compatible
   set nocompatible
@@ -9,9 +9,17 @@ endif
 
 let s:states = {}
 
+function! s:get_mdd_command() abort
+  let l:path_mdd = exepath('mdd')
+  if !empty(l:path_mdd)
+    return [l:path_mdd, '--json-rpc']
+  endif
+  return []
+endfunction
+
 function! s:echoerr(msg) abort
   echohl ErrorMsg
-  echom '[mdd-preview] ' . a:msg
+  echom '[mdd] ' . a:msg
   echohl None
 endfunction
 
@@ -212,8 +220,9 @@ function! s:open() abort
     return
   endif
 
-  if !executable('./mdd')
-    call s:echoerr('missing executable: ./mdd')
+  let l:cmd = s:get_mdd_command()
+  if len(l:cmd) == 0 || !executable(l:cmd[0])
+    call s:echoerr('missing executable in PATH: mdd')
     return
   endif
 
@@ -238,23 +247,23 @@ function! s:open() abort
         \ }
 
   if has('nvim')
-    let l:job = jobstart(['./mdd', '--json-rpc'], {
+    let l:job = jobstart(l:cmd, {
           \ 'on_stdout': function('s:on_nvim_stdout', [l:src_bufnr]),
           \ 'stdout_buffered': v:false,
           \ })
     if l:job <= 0
-      call s:echoerr('failed to start: ./mdd --json-rpc')
+      call s:echoerr('failed to start mdd json-rpc process')
       execute l:preview_win . 'wincmd c'
       return
     endif
     let l:state.job = l:job
   else
-    let l:job = job_start(['./mdd', '--json-rpc'], {
+    let l:job = job_start(l:cmd, {
           \ 'mode': 'nl',
           \ 'out_cb': function('s:on_vim_stdout', [l:src_bufnr]),
           \ })
     if job_status(l:job) ==# 'fail'
-      call s:echoerr('failed to start: ./mdd --json-rpc')
+      call s:echoerr('failed to start mdd json-rpc process')
       execute l:preview_win . 'wincmd c'
       return
     endif
@@ -278,7 +287,7 @@ function! s:toggle() abort
   endif
 endfunction
 
-augroup mdd_preview_events
+augroup mdd_events
   autocmd!
   autocmd TextChanged,TextChangedI * call s:maybe_refresh_for_current_buffer()
   autocmd CursorMoved,CursorMovedI * call s:maybe_cursor_sync_for_current_buffer()

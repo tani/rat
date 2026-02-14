@@ -1,15 +1,44 @@
-# mdd-v2
+# mdd
 
-To install dependencies:
+`mdd` renders Markdown to plain text/Unicode output and provides a Vim/Neovim live preview plugin over JSON-RPC (stdio).
 
-```bash
-bun install
-```
+## Quick Start
 
-To run:
+Render Markdown from stdin:
 
 ```bash
-bun run index.ts
+echo "# Hello\n\n*world*" | ./mdd
 ```
 
-This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Run JSON-RPC mode (used by the Vim plugin):
+
+```bash
+mdd --json-rpc
+```
+
+## Vim/Neovim Plugin
+
+```vim
+Plug 'tani/mdd', { rtp: 'vim/' }
+```
+
+Commands:
+
+- `:MddPreviewOpen`
+- `:MddPreviewClose`
+- `:MddPreviewToggle`
+
+Behavior:
+
+- Live preview updates without save (`TextChanged`, `TextChangedI`)
+- Cursor sync from source buffer to preview (`CursorMoved`, `CursorMovedI`)
+
+## Development Commands
+
+```bash
+bun test
+bun run test:vim
+bun run lint
+bun run typecheck
+bun run format:check
+```
