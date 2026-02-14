@@ -1,0 +1,27 @@
+{
+  "name": "mdd-v2",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "oxlint .",
+    "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
+    "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
+    "test": "bun test packages/**/*.test.ts",
+    "test:sourcemap": "bun test packages/remark-sourcemap/index.test.ts",
+    "test:inline": "bun test packages/remark-unicode-inline/index.test.ts",
+    "test:math": "bun test packages/remark-unicode-math/index.test.ts",
+    "test:mermaid": "bun test packages/remark-unicode-mermaid/index.test.ts",
+    "test:table": "bun test packages/remark-unicode-table/index.test.ts"
+  },
+  "dependencies": {
+    "@mdd/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "oxfmt": "^0.32.0",
+    "oxlint": "^1.47.0",
+    "typescript": "^5.9.2"
+  }
+}

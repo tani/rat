@@ -1,5 +1,7 @@
 # Markdown Rendering Example
 
+https://github.com/tani/mdd
+
 This document exercises most syntax supported by `mdd`.
 
 ## Headings
