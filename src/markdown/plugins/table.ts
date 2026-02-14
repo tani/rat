@@ -1,4 +1,16 @@
 import { styleText } from "node:util";
+import { toString } from "mdast-util-to-string";
+import type {
+  Code,
+  Nodes,
+  Root,
+  RootContent,
+  Table,
+  TableCell,
+  TableRow,
+} from "mdast";
+import type { Plugin } from "unified";
+import { visit } from "unist-util-visit";
 
 export type TableBorderStyle = "single" | "double" | "rounded";
 type Align = "left" | "center" | "right";
@@ -16,6 +28,20 @@ type BorderSet = {
   vertical: string;
   horizontal: string;
 };
+
+export type TableModel = {
+  header: string[];
+  align: Align[];
+  rows: string[][];
+};
+
+export type TableRenderOptions = {
+  style?: TableBorderStyle;
+  maxWidth?: number;
+  maxCellWidth?: number;
+};
+
+type ParentLike = { children: RootContent[] };
 
 const BORDER_STYLES: Record<TableBorderStyle, BorderSet> = {
   single: {
@@ -59,87 +85,11 @@ const BORDER_STYLES: Record<TableBorderStyle, BorderSet> = {
   },
 };
 
-export type TableRenderOptions = {
-  style?: TableBorderStyle;
-  maxWidth?: number;
-  maxCellWidth?: number;
-};
-
-type ParsedTable = {
-  header: string[];
-  align: Align[];
-  rows: string[][];
-  endIndex: number;
-};
-
 const normalizeCellText = (text: string): string =>
   text.replace(/\s*\n+\s*/g, " ").replace(/\s+/g, " ").trim().replace(
     /\|/g,
     "¦",
   );
-
-function parseRowCells(line: string): string[] | null {
-  if (!line.includes("|")) return null;
-  let text = line.trim();
-  if (!text.length) return null;
-  if (text.startsWith("|")) text = text.slice(1);
-  if (text.endsWith("|")) text = text.slice(0, -1);
-  const cells: string[] = [];
-  let current = "";
-  let escaped = false;
-  for (const ch of text) {
-    if (escaped) {
-      current += ch;
-      escaped = false;
-      continue;
-    }
-    if (ch === "\\") {
-      escaped = true;
-      continue;
-    }
-    if (ch === "|") {
-      cells.push(normalizeCellText(current));
-      current = "";
-      continue;
-    }
-    current += ch;
-  }
-  cells.push(normalizeCellText(current));
-  return cells;
-}
-
-function parseAlignment(line: string): Align[] | null {
-  const cells = parseRowCells(line);
-  if (!cells?.length) return null;
-  const aligns: Align[] = [];
-  for (const cell of cells) {
-    const t = cell.replace(/\s+/g, "");
-    if (!/^:?-+:?$/.test(t)) return null;
-    const left = t.startsWith(":");
-    const right = t.endsWith(":");
-    aligns.push(left && right ? "center" : right ? "right" : "left");
-  }
-  return aligns;
-}
-
-export function parseMarkdownTable(
-  lines: string[],
-  startIndex: number,
-): ParsedTable | null {
-  const header = parseRowCells(lines[startIndex] ?? "");
-  const align = parseAlignment(lines[startIndex + 1] ?? "");
-  if (!header || !align || !header.length) return null;
-
-  const rows: string[][] = [];
-  let i = startIndex + 2;
-  while (i < lines.length) {
-    const row = parseRowCells(lines[i]);
-    if (!row) break;
-    rows.push(row);
-    i++;
-  }
-  return { header, align, rows, endIndex: i - 1 };
-}
 
 function wrapCell(text: string, width: number): string[] {
   const clean = normalizeCellText(text);
@@ -192,7 +142,7 @@ function buildBorder(
 }
 
 export function renderMarkdownTable(
-  table: ParsedTable,
+  table: TableModel,
   options?: TableRenderOptions,
 ): string {
   const style = BORDER_STYLES[options?.style ?? "rounded"];
@@ -257,3 +207,70 @@ export function renderMarkdownTable(
   );
   return `${lines.join("\n")}\n`;
 }
+
+function tableCellText(cell: TableCell | undefined): string {
+  if (!cell) return "";
+  return normalizeCellText(toString(cell));
+}
+
+function normalizeAlign(value: Table["align"], cols: number): Align[] {
+  return Array.from({ length: cols }, (_, i) => {
+    const align = value?.[i];
+    if (align === "center" || align === "right" || align === "left") {
+      return align;
+    }
+    return "left";
+  });
+}
+
+function tableNodeToModel(node: Table): TableModel | null {
+  const rows = node.children as TableRow[];
+  if (!rows.length) return null;
+  const headerCells = rows[0]?.children ?? [];
+  const cols = Math.max(
+    headerCells.length,
+    ...rows.map((r) => (r.children as TableCell[]).length),
+  );
+  if (cols <= 0) return null;
+  const header = Array.from(
+    { length: cols },
+    (_, i) => tableCellText(headerCells[i] as TableCell | undefined),
+  );
+  const body = rows.slice(1).map((row) => {
+    const cells = row.children as TableCell[];
+    return Array.from(
+      { length: cols },
+      (_, i) => tableCellText(cells[i] as TableCell | undefined),
+    );
+  });
+  return {
+    header,
+    align: normalizeAlign(node.align, cols),
+    rows: body,
+  };
+}
+
+export const remarkRenderTable: Plugin<[TableRenderOptions?], Root> = (
+  options,
+) => {
+  return (tree: Root, file?: { data?: Record<string, unknown> }) => {
+    const filePrintWidth = Number(file?.data?.printWidth);
+    const maxWidth = Number.isFinite(filePrintWidth)
+      ? filePrintWidth
+      : options?.maxWidth;
+
+    visit(tree as Nodes, "table", (node, index, parent) => {
+      if (!parent || index === undefined) return;
+      const model = tableNodeToModel(node as Table);
+      if (!model) return;
+      const rendered = renderMarkdownTable(model, { ...options, maxWidth })
+        .trimEnd();
+      (parent as ParentLike).children[index] = {
+        type: "code",
+        lang: null,
+        meta: null,
+        value: rendered,
+      } as Code;
+    });
+  };
+};

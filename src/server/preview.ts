@@ -1,4 +1,4 @@
-import { renderMarkdown } from "../markdown/processors.ts";
+import { renderMarkdown } from "../markdown/pipeline.ts";
 import type { PositionMapEntry } from "../markdown/types.ts";
 import {
   MIN_COLS,

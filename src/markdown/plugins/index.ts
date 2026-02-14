@@ -1,12 +1,4 @@
-import type {
-  Code,
-  Definition,
-  Link,
-  Nodes,
-  Root,
-  RootContent,
-} from "mdast";
-import { renderMermaidAscii } from "beautiful-mermaid";
+import type { Code, Definition, Link, Nodes, Root } from "mdast";
 import { toString } from "mdast-util-to-string";
 import prettier from "prettier";
 import remarkGfm from "remark-gfm";
@@ -17,17 +9,19 @@ import type { Plugin } from "unified";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 
-import { renderBlockMath, renderInlineMath } from "./renderer-state.ts";
 import {
   MARKDOWN_MAP_GAP,
   MARKDOWN_MAP_THRESHOLD,
   type PositionMapEntry,
   type PositionPoint,
   REMARK_STRINGIFY_OPTIONS,
-} from "./types.ts";
-import { clampMin, MIN_COLS, normalizeText } from "../core/shared.ts";
+} from "../types.ts";
+import { clampMin, MIN_COLS, normalizeText } from "../../core/shared.ts";
 
-type ParentLike = { children: RootContent[] };
+export { remarkRenderMath } from "./latex.ts";
+export { remarkRenderMermaidAscii } from "./mermaid.ts";
+export { remarkRenderTable } from "./table.ts";
+
 type PositionLike = {
   start?: PositionPoint;
   end?: PositionPoint;
@@ -43,55 +37,6 @@ type Anchor = {
 export type RemarkPrettierOptions = {
   printWidth?: number;
 };
-
-function nodeValue(node: RootContent & { value?: unknown }): string {
-  return String(node.value ?? "").trim();
-}
-
-function replaceChildAt(
-  parent: unknown,
-  index: number | undefined,
-  node: RootContent,
-): void {
-  if (!parent || index === undefined) return;
-  (parent as ParentLike).children[index] = node;
-}
-
-export const remarkRenderMath: Plugin<[], Root> = () => (tree: Root) => {
-  visit(tree as Nodes, "inlineMath", (node, index, parent) => {
-    const src = nodeValue(node as RootContent & { value?: unknown });
-    const rendered = renderInlineMath(src).replace(/\$/g, "\\$");
-    replaceChildAt(parent, index, {
-      type: "text",
-      value: rendered,
-    } as RootContent);
-  });
-
-  visit(tree as Nodes, "math", (node, index, parent) => {
-    const src = nodeValue(node as RootContent & { value?: unknown });
-    const rendered = renderBlockMath(src).replace(/\$/g, "\\$");
-    replaceChildAt(parent, index, {
-      type: "code",
-      lang: null,
-      meta: null,
-      value: rendered,
-    } as RootContent);
-  });
-};
-
-export const remarkRenderMermaidAscii: Plugin<[], Root> =
-  () => (tree: Root) => {
-    visit(tree as Nodes, "code", (node) => {
-      const code = node as Code;
-      if (!/^mermaid$/i.test(String(code.lang ?? "").trim())) return;
-      try {
-        code.value = renderMermaidAscii(String(code.value ?? ""));
-        code.lang = null;
-      } catch {
-        // keep original mermaid source
-      }
-    });
-  };
 
 export const remarkNormalizeCodeBlocks: Plugin<[], Root> =
   () => (tree: Root) => {

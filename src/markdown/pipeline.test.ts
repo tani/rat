@@ -1,4 +1,4 @@
-import { renderMarkdown } from "./processors.ts";
+import { renderMarkdown } from "./pipeline.ts";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -25,8 +25,8 @@ Deno.test("renderMarkdown returns markdown and map with math/mermaid transform",
 
   const out = await renderMarkdown(input, 80);
   assert(
-    out.markdown.includes("| A"),
-    `table should stay markdown table: ${out.markdown}`,
+    out.markdown.includes("╭") || out.markdown.includes("┌"),
+    `table should be rendered to unicode block: ${out.markdown}`,
   );
   assert(
     out.markdown.includes("α"),

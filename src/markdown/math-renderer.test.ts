@@ -1,10 +1,10 @@
-import { renderBlockMath, renderInlineMath } from "./renderer-state.ts";
+import { renderBlockMath, renderInlineMath } from "./math-renderer.ts";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-Deno.test("renderer-state renders with static renderer or unicode fallback", () => {
+Deno.test("math-renderer renders with static renderer or unicode fallback", () => {
   const fallbackInline = renderInlineMath("\\alpha");
   assert(fallbackInline.includes("α"), "inline fallback should use unicodeit");
 

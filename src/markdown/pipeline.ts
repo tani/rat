@@ -9,8 +9,9 @@ import {
   remarkPrettier,
   remarkRenderMath,
   remarkRenderMermaidAscii,
+  remarkRenderTable,
   remarkShortenLinks,
-} from "./plugins.ts";
+} from "./plugins/index.ts";
 import {
   type PositionMapEntry,
   REMARK_STRINGIFY_OPTIONS,
@@ -25,6 +26,7 @@ function createMarkdownPipeline() {
     .use(remarkMath)
     .use(remarkRenderMath)
     .use(remarkRenderMermaidAscii)
+    .use(remarkRenderTable)
     .use(remarkNormalizeCodeBlocks)
     .use(remarkShortenLinks)
     .use(remarkPrettier)

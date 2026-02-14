@@ -1,6 +1,6 @@
 import { main } from "./server/main.ts";
-import { renderMarkdownToInkText } from "./markdown/ink.ts";
-import { renderMarkdown } from "./markdown/processors.ts";
+import { renderMarkdownToTerminalText } from "./markdown/terminal.ts";
+import { renderMarkdown } from "./markdown/pipeline.ts";
 import { MIN_COLS } from "./core/shared.ts";
 
 type CliMode =
@@ -34,7 +34,7 @@ function detectPrintWidth(): number {
 
 async function renderToStdout(input: string): Promise<void> {
   const out = await renderMarkdown(input, detectPrintWidth());
-  const text = renderMarkdownToInkText(out.markdown);
+  const text = renderMarkdownToTerminalText(out.markdown);
   await Deno.stdout.write(new TextEncoder().encode(text));
 }
 

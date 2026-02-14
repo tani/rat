@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import process from "node:process";
-import { renderMarkdownToInkText } from "../markdown/ink.ts";
+import { renderMarkdownToTerminalText } from "../markdown/terminal.ts";
 import { parseRenderRequest } from "./request.ts";
 import { DEFAULT_PORT } from "../core/shared.ts";
 import { createRefresh } from "./refresh.ts";
@@ -48,7 +48,7 @@ export function main() {
 
     try {
       await refresh(parsed.source, parsed.cursor.line, (text) => {
-        const rendered = renderMarkdownToInkText(text, {
+        const rendered = renderMarkdownToTerminalText(text, {
           trailingNewline: false,
         });
         render(/\S/.test(rendered) ? rendered : "");

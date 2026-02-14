@@ -1,9 +1,4 @@
 import { styleText } from "node:util";
-import {
-  parseMarkdownTable,
-  renderMarkdownTable,
-  type TableBorderStyle,
-} from "./table.ts";
 
 function decorateInline(text: string): string {
   const parts = text.split(/(`[^`]*`)/g);
@@ -84,13 +79,10 @@ function decorateLine(line: string): string {
   return decorateInline(line);
 }
 
-export function renderMarkdownToInkText(
+export function renderMarkdownToTerminalText(
   markdown: string,
   options?: {
     trailingNewline?: boolean;
-    tableStyle?: TableBorderStyle;
-    tableMaxWidth?: number;
-    tableCellMaxWidth?: number;
   },
 ): string {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -98,18 +90,6 @@ export function renderMarkdownToInkText(
   for (let i = 0; i < lines.length; i++) {
     if (/^( {4}|\t)/.test(lines[i])) {
       out.push(lines[i]);
-      continue;
-    }
-    const table = parseMarkdownTable(lines, i);
-    if (table) {
-      out.push(
-        renderMarkdownTable(table, {
-          style: options?.tableStyle,
-          maxWidth: options?.tableMaxWidth,
-          maxCellWidth: options?.tableCellMaxWidth,
-        }).trimEnd(),
-      );
-      i = table.endIndex;
       continue;
     }
     out.push(decorateLine(lines[i]));

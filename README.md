@@ -2,7 +2,7 @@
 
 Minimal terminal markdown preview service for `libtexprintf`.
 
-<img width="1197" height="1043" alt="image" src="https://github.com/user-attachments/assets/39c8d52f-630e-4d52-b92f-62b1ceadd2a2" />
+<img width="2394" height="2086" alt="image" src="https://github.com/user-attachments/assets/6a61349a-3f51-4c72-8c3a-c8a3af9ae83b" />
 
 ## Features
 
@@ -75,13 +75,13 @@ flowchart TD
 
 ## Public API
 
-From `src/markdown/processors.ts`:
+From `src/markdown/pipeline.ts`:
 
 - `renderMarkdown(input, printWidth) -> { markdown, positionMap }`
 
-From `src/markdown/ink.ts`:
+From `src/markdown/terminal.ts`:
 
-- `renderMarkdownToInkText(markdown) -> string`
+- `renderMarkdownToTerminalText(markdown) -> string`
 
 ## Development
 

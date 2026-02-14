@@ -1,38 +1,25 @@
-import { renderMarkdownToInkText } from "./ink.ts";
+import { renderMarkdownToTerminalText } from "./terminal.ts";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-Deno.test("renderMarkdownToInkText converts markdown table to box grid text", () => {
-  const out = renderMarkdownToInkText(
-    "| A | B |\n|---|---|\n| 1 | 2 |\n",
+Deno.test("renderMarkdownToTerminalText keeps already-rendered unicode table block", () => {
+  const out = renderMarkdownToTerminalText(
+    [
+      "    ╭───┬───╮",
+      "    │ A │ B │",
+      "    ╰───┴───╯",
+      "",
+    ].join("\n"),
   );
-  assert(
-    out.includes("╭") || out.includes("┌"),
-    `expected table border: ${out}`,
-  );
-  assert(out.includes("A"), `expected header text: ${out}`);
-  assert(out.includes("1"), `expected row text: ${out}`);
-  assert(
-    out.includes("┘") || out.includes("└") || out.includes("╯") ||
-      out.includes("╰"),
-    `expected table end: ${out}`,
-  );
+  assert(out.includes("╭"), `expected table border: ${out}`);
+  assert(out.includes("│ A │"), `expected table text: ${out}`);
+  assert(out.includes("╯"), `expected table end: ${out}`);
 });
 
-Deno.test("renderMarkdownToInkText keeps escaped pipes inside table cells", () => {
-  const out = renderMarkdownToInkText(
-    "| Lang | Type |\n|---|---|\n| ts | A \\| B |\n",
-  );
-  assert(
-    out.includes("A ¦ B"),
-    `escaped pipe should stay inside one cell: ${out}`,
-  );
-});
-
-Deno.test("renderMarkdownToInkText applies unicode-rich inline and block decoration", () => {
-  const out = renderMarkdownToInkText(
+Deno.test("renderMarkdownToTerminalText applies unicode-rich inline and block decoration", () => {
+  const out = renderMarkdownToTerminalText(
     [
       "# Heading",
       "",
@@ -61,8 +48,8 @@ Deno.test("renderMarkdownToInkText applies unicode-rich inline and block decorat
   );
 });
 
-Deno.test("renderMarkdownToInkText styles links with underline ANSI only", () => {
-  const out = renderMarkdownToInkText(
+Deno.test("renderMarkdownToTerminalText styles links with underline ANSI only", () => {
+  const out = renderMarkdownToTerminalText(
     "Inline [OpenAI](...) and ref [Docs][id]\n\n[id]: ...\n",
   );
   assert(out.includes("\u001b[4m"), `underline ANSI should be used: ${out}`);
