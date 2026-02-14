@@ -16,6 +16,32 @@ Run JSON-RPC mode (used by the Vim plugin):
 mdd --json-rpc
 ```
 
+## Download
+
+Download binaries from GitHub Releases (`nightly` tag):
+
+```bash
+mkdir -p ~/.local/bin
+curl -fL https://github.com/tani/mdd/releases/download/nightly/mdd-darwin-arm64 -o ~/.local/bin/mdd
+chmod +x ~/.local/bin/mdd
+mdd --help
+```
+
+Linux x64 example:
+
+```bash
+mkdir -p ~/.local/bin
+curl -fL https://github.com/tani/mdd/releases/download/nightly/mdd-linux-x64 -o ~/.local/bin/mdd
+chmod +x ~/.local/bin/mdd
+mdd --help
+```
+
+If `mdd` is not found, add this to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 ## Vim/Neovim Plugin
 
 ```vim
