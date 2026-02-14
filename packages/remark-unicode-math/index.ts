@@ -1,47 +1,53 @@
+import { CString, cc } from "bun:ffi";
 import unicodeit from "unicodeit";
 import type { Code, InlineCode, Parent, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { createRendererFromExports } from "./libtexprintf/libtexprintf";
-import wasmPath from "./libtexprintf/libtexprintf.wasm";
-
-const wasiSnapshotPreview1 = {
-  proc_exit(code: number): never {
-    throw new Error(`WASM requested proc_exit(${code})`);
-  },
-  fd_close(_fd: number): number {
-    return 0;
-  },
-  fd_write(_fd: number, _iovs: number, _iovsLen: number, _nwritten: number): number {
-    return 0;
-  },
-  fd_seek(
-    _fd: number,
-    _offsetLow: number,
-    _offsetHigh: number,
-    _whence: number,
-    _newOffset: number,
-  ): number {
-    return 0;
-  },
-};
+import { getStagedBridgeSourceFile } from "./libtexprintf/assets";
 
 type Renderer = (latex: string) => string;
 export type RemarkUnicodeMathOptions = {
   displayRenderer?: (latex: string) => string | Promise<string>;
 };
 let rendererPromise: Promise<Renderer> | undefined;
+const encoder = new TextEncoder();
+
+async function createNativeRenderer(): Promise<Renderer> {
+  const bridgeSourceFile = await getStagedBridgeSourceFile();
+  const {
+    symbols: { mdd_texfree, mdd_texstring },
+  } = cc({
+    source: bridgeSourceFile,
+    flags: ["-w"],
+    symbols: {
+      mdd_texstring: {
+        args: ["cstring"],
+        returns: "ptr",
+      },
+      mdd_texfree: {
+        args: ["ptr"],
+        returns: "void",
+      },
+    },
+  });
+
+  return (latex: string) => {
+    const outputPtr = mdd_texstring(encoder.encode(`${latex}\0`));
+    if (!outputPtr) {
+      return "";
+    }
+
+    try {
+      return new CString(outputPtr).toString();
+    } finally {
+      mdd_texfree(outputPtr);
+    }
+  };
+}
 
 function getRenderer(): Promise<Renderer> {
   if (!rendererPromise) {
-    rendererPromise = (async () => {
-      // const wasmUrl = new URL("./libtexprintf/libtexprintf.wasm", import.meta.url);
-      const bytes = await Bun.file(wasmPath).arrayBuffer();
-      const { instance } = await WebAssembly.instantiate(bytes, {
-        wasi_snapshot_preview1: wasiSnapshotPreview1,
-      });
-      return createRendererFromExports(instance.exports as never);
-    })();
+    rendererPromise = createNativeRenderer();
   }
   return rendererPromise;
 }
