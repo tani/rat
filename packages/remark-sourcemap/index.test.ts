@@ -12,20 +12,35 @@ function readSourcemap(file: VFile): RemarkSourcemapData {
   return data;
 }
 
+function hasLineMapping(map: RemarkSourcemapData, generatedLine: number, sourceLine: number): boolean {
+  return map.segments.some((segment) => {
+    const gen = segment.generated;
+    const src = segment.source;
+    return (
+      generatedLine >= gen.start.line &&
+      generatedLine <= gen.end.line &&
+      sourceLine >= src.start.line &&
+      sourceLine <= src.end.line
+    );
+  });
+}
+
 describe("remark-sourcemap", () => {
-  test("emits generated/current line-number correspondence", async () => {
+  test("emits v2 range segments that cover expected line mappings", async () => {
     const input = "# Title\n\nParagraph line.\n\n- a\n- b\n";
     const file = new VFile({ value: input });
 
     await unified().use(remarkParse).use(remarkSourcemap).use(remarkStringify).process(file);
 
     const map = readSourcemap(file);
-    expect(map.generatedToCurrent[1]).toBe(1);
-    expect(map.generatedToCurrent[3]).toBe(3);
-    expect(map.currentToGenerated[5]).toBe(5);
+    expect(map.version).toBe(2);
+    expect(map.segments.length).toBeGreaterThan(0);
+    expect(hasLineMapping(map, 1, 1)).toBeTrue();
+    expect(hasLineMapping(map, 3, 3)).toBeTrue();
+    expect(hasLineMapping(map, 5, 5)).toBeTrue();
   });
 
-  test("maps shifted generated lines back to original lines", async () => {
+  test("keeps stable mappings after inserting unpositioned nodes", async () => {
     const input = "Paragraph line.\n";
     const file = new VFile({ value: input });
 
@@ -47,7 +62,7 @@ describe("remark-sourcemap", () => {
       .process(file);
 
     const map = readSourcemap(file);
-    expect(map.generatedToCurrent[3]).toBe(2);
-    expect(map.currentToGenerated[2]).toBe(4);
+    expect(hasLineMapping(map, 3, 2)).toBeTrue();
+    expect(hasLineMapping(map, 4, 2)).toBeTrue();
   });
 });

@@ -34,8 +34,8 @@ export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
     .process(input);
 
   const sourcemap = (file.data as { sourcemap?: RemarkSourcemapData }).sourcemap ?? {
-    generatedToCurrent: {},
-    currentToGenerated: {},
+    version: 2,
+    segments: [],
   };
 
   return {

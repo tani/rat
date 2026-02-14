@@ -3,136 +3,177 @@ import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import { visit } from "unist-util-visit";
 import type { Node } from "unist";
+import type { Point, Position } from "unist";
 import type { Root } from "mdast";
 import type { VFile } from "vfile";
 
-export type RemarkSourcemapData = {
-  generatedToCurrent: Record<number, number>;
-  currentToGenerated: Record<number, number>;
+export type RemarkSourcemapPoint = {
+  line: number;
+  column: number;
+  offset?: number;
 };
+
+export type RemarkSourcemapRange = {
+  start: RemarkSourcemapPoint;
+  end: RemarkSourcemapPoint;
+};
+
+export type RemarkSourcemapSegment = {
+  nodeType: string;
+  generated: RemarkSourcemapRange;
+  source: RemarkSourcemapRange;
+};
+
+export type RemarkSourcemapData = {
+  version: 2;
+  segments: RemarkSourcemapSegment[];
+};
+
+type NodeRecord = {
+  node: Node;
+  signature: string;
+};
+
+const TRACKED_TYPES = new Set([
+  "root",
+  "heading",
+  "paragraph",
+  "blockquote",
+  "list",
+  "listItem",
+  "code",
+  "html",
+  "thematicBreak",
+  "table",
+  "tableRow",
+  "definition",
+  "math",
+]);
 
 function normalizeText(value: string): string {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-function diceCoefficient(a: string, b: string): number {
-  if (a === b) return 1;
-  if (!a.length || !b.length) return 0;
-  if (a.length === 1 || b.length === 1) return a === b ? 1 : 0;
-
-  const pairs = new Map<string, number>();
-  for (let i = 0; i < a.length - 1; i += 1) {
-    const pair = a.slice(i, i + 2);
-    pairs.set(pair, (pairs.get(pair) ?? 0) + 1);
-  }
-
-  let intersection = 0;
-  for (let i = 0; i < b.length - 1; i += 1) {
-    const pair = b.slice(i, i + 2);
-    const count = pairs.get(pair) ?? 0;
-    if (count > 0) {
-      pairs.set(pair, count - 1);
-      intersection += 1;
-    }
-  }
-
-  return (2 * intersection) / (a.length + b.length - 2);
+function signatureOf(node: Node): string {
+  return `${node.type}:${normalizeText(toString(node as never))}`;
 }
 
-function collectNodes(root: Node): Node[] {
-  const out: Node[] = [];
-  visit(root, (node) => out.push(node));
+function shouldTrackNode(node: Node): boolean {
+  if (node.type === "root") return true;
+  if (!node.position) return false;
+  return TRACKED_TYPES.has(node.type);
+}
+
+function collectNodeRecords(root: Node): NodeRecord[] {
+  const out: NodeRecord[] = [];
+
+  const walk = (node: Node, hasUnstableOffset: boolean): void => {
+    if (!hasUnstableOffset && shouldTrackNode(node)) {
+      out.push({
+        node,
+        signature: signatureOf(node),
+      });
+    }
+
+    const parent = node as Node & { children?: Node[] };
+    const children = parent.children;
+    if (!children || children.length === 0) return;
+
+    let sawMissingPosition = false;
+    for (const child of children) {
+      walk(child, hasUnstableOffset || sawMissingPosition);
+      if (!child.position) sawMissingPosition = true;
+    }
+  };
+
+  walk(root, false);
   return out;
 }
 
-function fuzzyMatch(currentNodes: Node[], generatedNodes: Node[]): Array<[Node, Node]> {
-  const byType = new Map<string, Node[]>();
-  for (const node of currentNodes) {
-    const list = byType.get(node.type);
-    if (list) list.push(node);
-    else byType.set(node.type, [node]);
-  }
-
-  const consumed = new WeakSet<Node>();
-  const pairs: Array<[Node, Node]> = [];
-
-  for (const generated of generatedNodes) {
-    const pool = byType.get(generated.type);
-    if (!pool || pool.length === 0) continue;
-
-    const genText = normalizeText(toString(generated as never));
-    let best: Node | undefined;
-    let bestScore = -1;
-
-    for (const current of pool) {
-      if (consumed.has(current)) continue;
-      const score = diceCoefficient(genText, normalizeText(toString(current as never)));
-      if (score > bestScore) {
-        best = current;
-        bestScore = score;
-      }
-    }
-
-    if (!best) continue;
-    consumed.add(best);
-    pairs.push([generated, best]);
-  }
-
-  return pairs;
+function tableAt(table: Uint32Array, index: number): number {
+  return table[index] ?? 0;
 }
 
-function addLineMap(
-  map: Record<number, number>,
-  fromStart: number,
-  fromEnd: number,
-  toStart: number,
-  toEnd: number,
-): void {
-  const fromSpan = Math.max(1, fromEnd - fromStart + 1);
-  const toSpan = Math.max(1, toEnd - toStart + 1);
-  const span = Math.max(fromSpan, toSpan);
+function buildLcsTable(generated: NodeRecord[], current: NodeRecord[]): Uint32Array {
+  const cols = current.length + 1;
+  const table = new Uint32Array((generated.length + 1) * cols);
 
-  for (let i = 0; i < span; i += 1) {
-    const fromLine = Math.min(fromEnd, fromStart + Math.floor((i * fromSpan) / span));
-    const toLine = Math.min(toEnd, toStart + Math.floor((i * toSpan) / span));
-    map[fromLine] = toLine;
+  for (let i = 1; i <= generated.length; i += 1) {
+    for (let j = 1; j <= current.length; j += 1) {
+      const idx = i * cols + j;
+      if (generated[i - 1]?.signature === current[j - 1]?.signature) {
+        table[idx] = tableAt(table, (i - 1) * cols + (j - 1)) + 1;
+      } else {
+        table[idx] = Math.max(tableAt(table, (i - 1) * cols + j), tableAt(table, i * cols + (j - 1)));
+      }
+    }
   }
+
+  return table;
+}
+
+function lcsMatch(currentNodes: NodeRecord[], generatedNodes: NodeRecord[]): Array<[Node, Node]> {
+  const table = buildLcsTable(generatedNodes, currentNodes);
+  const cols = currentNodes.length + 1;
+  const pairs: Array<[Node, Node]> = [];
+  let i = generatedNodes.length;
+  let j = currentNodes.length;
+
+  while (i > 0 && j > 0) {
+    const gen = generatedNodes[i - 1];
+    const cur = currentNodes[j - 1];
+    if (gen?.signature === cur?.signature && gen && cur) {
+      pairs.push([gen.node, cur.node]);
+      i -= 1;
+      j -= 1;
+      continue;
+    }
+
+    if (tableAt(table, (i - 1) * cols + j) >= tableAt(table, i * cols + (j - 1))) i -= 1;
+    else j -= 1;
+  }
+
+  return pairs.reverse();
+}
+
+function toSourcemapPoint(point: Point): RemarkSourcemapPoint {
+  return {
+    line: point.line,
+    column: point.column,
+    offset: point.offset,
+  };
+}
+
+function toSourcemapRange(position: Position): RemarkSourcemapRange {
+  return {
+    start: toSourcemapPoint(position.start),
+    end: toSourcemapPoint(position.end),
+  };
 }
 
 function emitLineMap(currentTree: Root, generatedTree: Root, file: VFile): void {
-  const currentNodes = collectNodes(currentTree);
-  const generatedNodes = collectNodes(generatedTree);
-  const pairs = fuzzyMatch(currentNodes, generatedNodes);
+  const currentNodes = collectNodeRecords(currentTree);
+  const generatedNodes = collectNodeRecords(generatedTree);
+  const pairs = lcsMatch(currentNodes, generatedNodes);
 
-  const generatedToCurrent: Record<number, number> = {};
-  const currentToGenerated: Record<number, number> = {};
+  const segments: RemarkSourcemapSegment[] = [];
 
   for (const [generated, current] of pairs) {
     const genPos = generated.position;
     const curPos = current.position;
     if (!genPos || !curPos) continue;
 
-    addLineMap(
-      generatedToCurrent,
-      genPos.start.line,
-      genPos.end.line,
-      curPos.start.line,
-      curPos.end.line,
-    );
-    addLineMap(
-      currentToGenerated,
-      curPos.start.line,
-      curPos.end.line,
-      genPos.start.line,
-      genPos.end.line,
-    );
+    segments.push({
+      nodeType: generated.type,
+      generated: toSourcemapRange(genPos),
+      source: toSourcemapRange(curPos),
+    });
   }
 
   (file.data as { sourcemap?: RemarkSourcemapData }).sourcemap = {
-    generatedToCurrent,
-    currentToGenerated,
+    version: 2,
+    segments,
   };
 }
 

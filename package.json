@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "lint": "oxlint -D suspicious -D pedantic --deny-warnings .",
+    "lint": "oxlint -D suspicious -D pedantic -D perf --deny-warnings .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
     "test": "bun test packages/**/*.test.ts",
