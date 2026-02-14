@@ -9,13 +9,9 @@
     "lint": "oxlint -D suspicious -D pedantic -D perf --deny-warnings .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
-    "test": "bun test packages/**/*.test.ts",
-    "typecheck": "tsc --noEmit",
-    "test:sourcemap": "bun test packages/remark-sourcemap/index.test.ts",
-    "test:inline": "bun test packages/remark-unicode-inline/index.test.ts",
-    "test:math": "bun test packages/remark-unicode-math/index.test.ts",
-    "test:mermaid": "bun test packages/remark-unicode-mermaid/index.test.ts",
-    "test:table": "bun test packages/remark-unicode-table/index.test.ts"
+    "test:vim": "bun test vim/mdd_vim.test.ts",
+    "compile": "./scripts/compile-all-platforms.sh",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@mdd/core": "workspace:*"

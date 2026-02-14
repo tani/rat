@@ -1,96 +1,290 @@
-if exists('g:loaded_mdd_plugin')
+if exists('g:loaded_mdd_preview')
   finish
 endif
-let g:loaded_mdd_plugin = 1
+let g:loaded_mdd_preview = 1
 
-if !exists('g:mdd_server_url')
-  let g:mdd_server_url = 'http://127.0.0.1:8787/render'
-endif
-if !exists('g:mdd_sync_enabled')
-  let g:mdd_sync_enabled = 1
-endif
-if !exists('g:mdd_sync_on_cursor')
-  let g:mdd_sync_on_cursor = 1
-endif
-if !exists('g:mdd_sync_timeout_seconds')
-  let g:mdd_sync_timeout_seconds = 2
-endif
-if !exists('g:mdd_sync_async')
-  let g:mdd_sync_async = 1
-endif
-if !exists('g:mdd_sync_debounce_ms')
-  let g:mdd_sync_debounce_ms = 100
+if &compatible
+  set nocompatible
 endif
 
-function! s:TargetBuffer() abort
-  if &buftype !=# ''
-    return 0
-  endif
-  return &filetype ==# 'markdown' || expand('%:e') =~# '^\%(md\|markdown\|mdx\)$'
+let s:states = {}
+
+function! s:echoerr(msg) abort
+  echohl ErrorMsg
+  echom '[mdd-preview] ' . a:msg
+  echohl None
 endfunction
 
-function! s:BufferBase64() abort
-  let l:text = join(getline(1, '$'), "\n")
-  if exists('*base64_encode')
-    return base64_encode(l:text)
+function! s:line_based_output(state, src_line) abort
+  if !has_key(a:state, 'last_sourcemap')
+    return a:src_line
   endif
-  if has('nvim') && exists('*luaeval')
-    return luaeval('vim.base64.encode(_A)', l:text)
-  endif
-  let l:tmp = tempname()
-  call writefile(getline(1, '$'), l:tmp)
-  let l:out = substitute(system('base64 < ' . shellescape(l:tmp) . " | tr -d '\\n'"), '\n\+$', '', '')
-  call delete(l:tmp)
-  return l:out
+  let l:segments = get(a:state.last_sourcemap, 'segments', [])
+  for l:segment in l:segments
+    let l:in_start = get(get(get(l:segment, 'input', {}), 'start', {}), 'line', 0)
+    let l:in_end = get(get(get(l:segment, 'input', {}), 'end', {}), 'line', 0)
+    if l:in_start <= a:src_line && a:src_line <= l:in_end
+      return get(get(get(l:segment, 'output', {}), 'start', {}), 'line', a:src_line)
+    endif
+  endfor
+  return a:src_line
 endfunction
 
-function! s:BuildRequest(line_num) abort
-  let l:url = get(g:, 'mdd_server_url', 'http://127.0.0.1:8787/render')
-  let l:timeout = max([1, float2nr(get(g:, 'mdd_sync_timeout_seconds', 2))])
-  let l:base = 'curl -sS -o /dev/null --max-time ' . l:timeout
-        \ . ' --get ' . shellescape(l:url)
-        \ . ' --data-urlencode ' . shellescape('l=' . a:line_num)
-  return l:base . ' --data-urlencode ' . shellescape('b=' . s:BufferBase64())
+function! s:sync_preview_cursor(src_bufnr) abort
+  let l:key = string(a:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  let l:state = s:states[l:key]
+  let l:preview_win = get(l:state, 'preview_win', -1)
+  if l:preview_win <= 0 || win_id2win(l:preview_win) == 0
+    return
+  endif
+  let l:src_pos = getcurpos()
+  let l:out_line = s:line_based_output(l:state, l:src_pos[1])
+  call win_execute(l:preview_win, 'call cursor(' . l:out_line . ', 1) | normal! zz')
 endfunction
 
-function! s:Dispatch(cmd) abort
-  if get(g:, 'mdd_sync_async', 1) && exists('*jobstart')
-    call jobstart(['sh', '-c', a:cmd], {'detach': v:true})
+function! s:replace_preview_buffer(preview_bufnr, markdown) abort
+  let l:lines = split(a:markdown, "\n", 1)
+  if empty(l:lines)
+    let l:lines = ['']
+  endif
+  call setbufvar(a:preview_bufnr, '&readonly', 0)
+  call setbufvar(a:preview_bufnr, '&modifiable', 1)
+  if len(getbufline(a:preview_bufnr, 1, '$')) > 0
+    call deletebufline(a:preview_bufnr, 1, '$')
+  endif
+  call setbufline(a:preview_bufnr, 1, l:lines)
+  call setbufvar(a:preview_bufnr, '&modifiable', 0)
+  call setbufvar(a:preview_bufnr, '&readonly', 1)
+endfunction
+
+function! s:handle_message(src_bufnr, msg) abort
+  let l:key = string(a:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  if empty(a:msg)
+    return
+  endif
+
+  try
+    let l:parsed = json_decode(a:msg)
+  catch
+    return
+  endtry
+
+  if type(l:parsed) != v:t_dict
+    return
+  endif
+  if !has_key(l:parsed, 'result')
+    return
+  endif
+  if type(l:parsed.result) != v:t_dict
+    return
+  endif
+
+  let l:state = s:states[l:key]
+  let l:markdown = get(l:parsed.result, 'markdown', '')
+  let l:state.last_sourcemap = get(l:parsed.result, 'sourcemap', {'version': 2, 'segments': []})
+  call s:replace_preview_buffer(l:state.preview_bufnr, l:markdown)
+  let s:states[l:key] = l:state
+
+  if bufnr('%') == a:src_bufnr
+    call s:sync_preview_cursor(a:src_bufnr)
+  endif
+endfunction
+
+function! s:queue_send(src_bufnr) abort
+  let l:key = string(a:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  let l:state = s:states[l:key]
+  if get(l:state, 'sending', 0)
+    return
+  endif
+  let l:state.sending = 1
+  let s:states[l:key] = l:state
+  call timer_start(120, {-> s:send_render(a:src_bufnr)})
+endfunction
+
+function! s:send_render(src_bufnr) abort
+  let l:key = string(a:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  let l:state = s:states[l:key]
+  let l:state.sending = 0
+  if !bufexists(a:src_bufnr)
+    return
+  endif
+
+  let l:line = line('.')
+  let l:col = col('.')
+  if bufnr('%') != a:src_bufnr
+    let l:line = get(getbufinfo(a:src_bufnr)[0], 'lnum', 1)
+    let l:col = 1
+  endif
+
+  let l:state.request_id += 1
+  let l:text = join(getbufline(a:src_bufnr, 1, '$'), "\n")
+  let l:req = {
+        \ 'jsonrpc': '2.0',
+        \ 'id': l:state.request_id,
+        \ 'method': 'render',
+        \ 'params': {
+        \   'text': l:text,
+        \   'cursor': {'line': l:line, 'column': l:col},
+        \ },
+        \ }
+
+  if has('nvim')
+    call chansend(l:state.job, json_encode(l:req) . "\n")
   else
-    call system(a:cmd)
+    call ch_sendraw(l:state.job, json_encode(l:req) . "\n")
+  endif
+
+  let s:states[l:key] = l:state
+endfunction
+
+function! s:close_preview(src_bufnr) abort
+  let l:key = string(a:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  let l:state = s:states[l:key]
+
+  if has('nvim')
+    if get(l:state, 'job', 0) > 0
+      call chanclose(l:state.job, 'stdin')
+      call jobstop(l:state.job)
+    endif
+  else
+    if get(l:state, 'job', 0) > 0
+      call job_stop(l:state.job)
+    endif
+  endif
+
+  if get(l:state, 'preview_win', -1) > 0 && win_id2win(l:state.preview_win) != 0
+    call win_execute(l:state.preview_win, 'close')
+  endif
+
+  call remove(s:states, l:key)
+endfunction
+
+function! s:maybe_refresh_for_current_buffer() abort
+  let l:src_bufnr = bufnr('%')
+  let l:key = string(l:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  call s:queue_send(l:src_bufnr)
+endfunction
+
+function! s:maybe_cursor_sync_for_current_buffer() abort
+  let l:src_bufnr = bufnr('%')
+  let l:key = string(l:src_bufnr)
+  if !has_key(s:states, l:key)
+    return
+  endif
+  call s:sync_preview_cursor(l:src_bufnr)
+endfunction
+
+function! s:on_vim_stdout(src_bufnr, channel, msg) abort
+  call s:handle_message(a:src_bufnr, a:msg)
+endfunction
+
+function! s:on_nvim_stdout(src_bufnr, job, lines, event) abort
+  for l:line in a:lines
+    if !empty(l:line)
+      call s:handle_message(a:src_bufnr, l:line)
+    endif
+  endfor
+endfunction
+
+function! s:open() abort
+  let l:src_bufnr = bufnr('%')
+  let l:key = string(l:src_bufnr)
+  if has_key(s:states, l:key)
+    call s:queue_send(l:src_bufnr)
+    return
+  endif
+
+  if !executable('./mdd')
+    call s:echoerr('missing executable: ./mdd')
+    return
+  endif
+
+  vertical rightbelow new
+  let l:preview_win = win_getid()
+  enew
+  let l:preview_bufnr = bufnr('%')
+  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+  setlocal filetype=markdown
+  setlocal nonumber norelativenumber
+  setlocal nomodifiable readonly
+
+  wincmd p
+
+  let l:state = {
+        \ 'job': 0,
+        \ 'preview_win': l:preview_win,
+        \ 'preview_bufnr': l:preview_bufnr,
+        \ 'request_id': 0,
+        \ 'sending': 0,
+        \ 'last_sourcemap': {'version': 2, 'segments': []},
+        \ }
+
+  if has('nvim')
+    let l:job = jobstart(['./mdd', '--json-rpc'], {
+          \ 'on_stdout': function('s:on_nvim_stdout', [l:src_bufnr]),
+          \ 'stdout_buffered': v:false,
+          \ })
+    if l:job <= 0
+      call s:echoerr('failed to start: ./mdd --json-rpc')
+      execute l:preview_win . 'wincmd c'
+      return
+    endif
+    let l:state.job = l:job
+  else
+    let l:job = job_start(['./mdd', '--json-rpc'], {
+          \ 'mode': 'nl',
+          \ 'out_cb': function('s:on_vim_stdout', [l:src_bufnr]),
+          \ })
+    if job_status(l:job) ==# 'fail'
+      call s:echoerr('failed to start: ./mdd --json-rpc')
+      execute l:preview_win . 'wincmd c'
+      return
+    endif
+    let l:state.job = l:job
+  endif
+
+  let s:states[l:key] = l:state
+  call s:queue_send(l:src_bufnr)
+endfunction
+
+function! s:close() abort
+  call s:close_preview(bufnr('%'))
+endfunction
+
+function! s:toggle() abort
+  let l:key = string(bufnr('%'))
+  if has_key(s:states, l:key)
+    call s:close()
+  else
+    call s:open()
   endif
 endfunction
 
-function! s:SyncNow() abort
-  if !get(g:, 'mdd_sync_enabled', 1) || !s:TargetBuffer()
-    return
-  endif
-  if !executable('curl')
-    return
-  endif
-
-  call s:Dispatch(s:BuildRequest(line('.')))
-endfunction
-
-function! s:QueueSync() abort
-  if !get(g:, 'mdd_sync_enabled', 1) || !s:TargetBuffer()
-    return
-  endif
-
-  if exists('b:mdd_sync_timer')
-    call timer_stop(b:mdd_sync_timer)
-  endif
-  let b:mdd_sync_timer = timer_start(
-        \ max([0, float2nr(get(g:, 'mdd_sync_debounce_ms', 100))]),
-        \ {-> <SID>SyncNow()})
-endfunction
-
-command! MddSyncNow call <SID>SyncNow()
-command! MddSyncEnable let g:mdd_sync_enabled = 1 | call <SID>QueueSync()
-command! MddSyncDisable let g:mdd_sync_enabled = 0
-
-augroup mdd_sync
+augroup mdd_preview_events
   autocmd!
-  autocmd BufEnter,TextChanged,TextChangedI *.md,*.markdown,*.mdx call <SID>QueueSync()
-  autocmd CursorMoved *.md,*.markdown,*.mdx if get(g:, 'mdd_sync_on_cursor', 1) | call <SID>QueueSync() | endif
+  autocmd TextChanged,TextChangedI * call s:maybe_refresh_for_current_buffer()
+  autocmd CursorMoved,CursorMovedI * call s:maybe_cursor_sync_for_current_buffer()
+  autocmd BufWipeout * call s:close_preview(str2nr(expand('<abuf>')))
 augroup END
+
+command! MddPreviewOpen call <SID>open()
+command! MddPreviewClose call <SID>close()
+command! MddPreviewToggle call <SID>toggle()

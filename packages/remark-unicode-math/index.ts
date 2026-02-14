@@ -3,6 +3,7 @@ import type { Code, InlineCode, Parent, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { createRendererFromExports } from "./libtexprintf/libtexprintf";
+import wasmPath from "./libtexprintf/libtexprintf.wasm";
 
 const wasiSnapshotPreview1 = {
   proc_exit(code: number): never {
@@ -34,8 +35,8 @@ let rendererPromise: Promise<Renderer> | undefined;
 function getRenderer(): Promise<Renderer> {
   if (!rendererPromise) {
     rendererPromise = (async () => {
-      const wasmUrl = new URL("./libtexprintf/libtexprintf.wasm", import.meta.url);
-      const bytes = await Bun.file(wasmUrl).arrayBuffer();
+      // const wasmUrl = new URL("./libtexprintf/libtexprintf.wasm", import.meta.url);
+      const bytes = await Bun.file(wasmPath).arrayBuffer();
       const { instance } = await WebAssembly.instantiate(bytes, {
         wasi_snapshot_preview1: wasiSnapshotPreview1,
       });

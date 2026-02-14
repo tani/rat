@@ -9,4 +9,4 @@ if [ -f "$SIMPLE_GIT_HOOKS_RC" ]; then
     . "$SIMPLE_GIT_HOOKS_RC"
 fi
 
-bun run typecheck && bun run lint && bun run format:check && bun run test
+bun run typecheck && bun run lint && bun run format:check && bun test
