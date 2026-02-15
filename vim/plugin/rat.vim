@@ -118,6 +118,14 @@ function! s:queue_send(src_bufnr) abort
   call timer_start(120, {-> s:send_render(a:src_bufnr)})
 endfunction
 
+function! s:detect_language(src_bufnr) abort
+  let l:filetype = getbufvar(a:src_bufnr, '&filetype')
+  if l:filetype ==# 'tex' || l:filetype ==# 'plaintex' || l:filetype ==# 'latex'
+    return 'latex'
+  endif
+  return 'markdown'
+endfunction
+
 function! s:send_render(src_bufnr) abort
   let l:key = string(a:src_bufnr)
   if !has_key(s:states, l:key)
@@ -138,12 +146,14 @@ function! s:send_render(src_bufnr) abort
 
   let l:state.request_id += 1
   let l:text = join(getbufline(a:src_bufnr, 1, '$'), "\n")
+  let l:language = s:detect_language(a:src_bufnr)
   let l:req = {
         \ 'jsonrpc': '2.0',
         \ 'id': l:state.request_id,
         \ 'method': 'render',
         \ 'params': {
         \   'text': l:text,
+        \   'language': l:language,
         \   'cursor': {'line': l:line, 'column': l:col},
         \ },
         \ }

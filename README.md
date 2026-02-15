@@ -10,10 +10,45 @@ Render Markdown from stdin:
 echo "# Hello\n\n*world*" | ./rat
 ```
 
+Render LaTeX from stdin:
+
+```bash
+echo 'Term: \(\alpha^2 + \beta\)' | rat --language=latex
+```
+
 Run JSON-RPC mode (used by the Vim plugin):
 
 ```bash
 rat --json-rpc
+```
+
+## CLI Language Mode
+
+`rat` supports language selection with:
+
+- `--language=markdown`
+- `--language=latex`
+
+You can also use `--language markdown` / `--language latex`.
+If omitted, default is `markdown`.
+
+## JSON-RPC
+
+`render` accepts `params.language`:
+
+- `"markdown"` (default): returns `{ markdown, sourcemap, previewLine }`
+- `"latex"`: returns `{ text }`
+
+Example request:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"render","params":{"text":"A: $\\alpha+\\beta$","language":"latex"}}
+```
+
+Example response:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β"}}
 ```
 
 ## Download
@@ -58,6 +93,9 @@ Behavior:
 
 - Live preview updates without save (`TextChanged`, `TextChangedI`)
 - Cursor sync from source buffer to preview (`CursorMoved`, `CursorMovedI`)
+- Sends `params.language` automatically:
+  - `latex` for `filetype` `tex`/`plaintex`/`latex`
+  - `markdown` for all other filetypes
 
 ## Development Commands
 

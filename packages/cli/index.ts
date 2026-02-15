@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { renderLatex } from "@rat/latex-unicode";
 import { renderMarkdown } from "@rat/markdown-unicode";
 
 async function readStdin(): Promise<string> {
@@ -22,6 +23,7 @@ type Cursor = {
 type RenderParams = {
   text: string;
   cursor?: Cursor;
+  language?: "markdown" | "latex";
 };
 
 type SourcemapSegment = {
@@ -64,9 +66,16 @@ function parseCursor(value: unknown): Cursor | undefined {
 function parseRenderParams(value: unknown): RenderParams | undefined {
   if (!isObject(value)) return undefined;
   if (typeof value.text !== "string") return undefined;
+  const languageRaw = value.language;
+  let language: "markdown" | "latex" | undefined;
+  if (languageRaw !== undefined) {
+    if (languageRaw !== "markdown" && languageRaw !== "latex") return undefined;
+    language = languageRaw;
+  }
   return {
     text: value.text,
     cursor: parseCursor(value.cursor),
+    language,
   };
 }
 
@@ -95,6 +104,52 @@ function writeJsonRpcError(id: JsonRpcId, code: number, message: string): void {
   });
 }
 
+function writeJsonRpcResult(id: JsonRpcId, result: unknown): void {
+  if (id === undefined) return;
+  writeJson({
+    jsonrpc: "2.0",
+    id,
+    result,
+  });
+}
+
+async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise<void> {
+  const params = parseRenderParams(paramsValue);
+  if (!params) {
+    writeJsonRpcError(id ?? null, -32602, "Invalid params");
+    return;
+  }
+  if (params.language === "latex") {
+    const text = await renderLatex(params.text);
+    writeJsonRpcResult(id, { text });
+    return;
+  }
+  const rendered = await renderMarkdown(params.text);
+  const previewLine = params.cursor
+    ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
+    : null;
+  writeJsonRpcResult(id, {
+    markdown: rendered.markdown,
+    sourcemap: rendered.sourcemap,
+    previewLine,
+  });
+}
+
+async function handleRenderLatexRequest(id: JsonRpcId, paramsValue: unknown): Promise<void> {
+  const params = parseRenderParams(paramsValue);
+  if (!params) {
+    writeJsonRpcError(id ?? null, -32602, "Invalid params");
+    return;
+  }
+  const rendered = await renderLatex(params.text);
+  writeJsonRpcResult(id, { text: rendered });
+}
+
+function handleShutdownRequest(id: JsonRpcId): void {
+  writeJsonRpcResult(id, null);
+  process.exit(0);
+}
+
 async function handleJsonRpcRequest(request: JsonRpcRequest): Promise<void> {
   if (request.jsonrpc !== "2.0" || typeof request.method !== "string") {
     writeJsonRpcError(request.id ?? null, -32600, "Invalid Request");
@@ -102,38 +157,17 @@ async function handleJsonRpcRequest(request: JsonRpcRequest): Promise<void> {
   }
 
   if (request.method === "render") {
-    const params = parseRenderParams(request.params);
-    if (!params) {
-      writeJsonRpcError(request.id ?? null, -32602, "Invalid params");
-      return;
-    }
-    const rendered = await renderMarkdown(params.text);
-    const previewLine = params.cursor
-      ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
-      : null;
-    if (request.id !== undefined) {
-      writeJson({
-        jsonrpc: "2.0",
-        id: request.id,
-        result: {
-          markdown: rendered.markdown,
-          sourcemap: rendered.sourcemap,
-          previewLine,
-        },
-      });
-    }
+    await handleRenderRequest(request.id ?? null, request.params);
+    return;
+  }
+
+  if (request.method === "renderLatex") {
+    await handleRenderLatexRequest(request.id ?? null, request.params);
     return;
   }
 
   if (request.method === "shutdown") {
-    if (request.id !== undefined) {
-      writeJson({
-        jsonrpc: "2.0",
-        id: request.id,
-        result: null,
-      });
-    }
-    process.exit(0);
+    handleShutdownRequest(request.id ?? null);
   }
 
   writeJsonRpcError(request.id ?? null, -32601, "Method not found");
@@ -178,14 +212,38 @@ async function runJsonRpcMode(): Promise<void> {
   await readNext();
 }
 
+function resolveCliLanguage(argv: string[]): "markdown" | "latex" {
+  const eq = argv.find((arg) => arg.startsWith("--language="));
+  if (eq) {
+    const lang = eq.slice("--language=".length);
+    if (lang === "markdown" || lang === "latex") return lang;
+    throw new Error(`invalid --language value: ${lang}`);
+  }
+  const idx = argv.indexOf("--language");
+  if (idx !== -1) {
+    const lang = argv[idx + 1];
+    if (lang === "markdown" || lang === "latex") return lang;
+    throw new Error(`invalid --language value: ${lang ?? ""}`);
+  }
+  // Backward compatibility.
+  if (argv.includes("--latex")) return "latex";
+  return "markdown";
+}
+
 async function main(): Promise<void> {
   if (process.argv.includes("--json-rpc")) {
     await runJsonRpcMode();
     return;
   }
   const input = await readStdin();
-  const { markdown } = await renderMarkdown(input);
-  process.stdout.write(markdown);
+  const language = resolveCliLanguage(process.argv);
+  if (language === "latex") {
+    const rendered = await renderLatex(input);
+    process.stdout.write(rendered);
+  } else {
+    const { markdown } = await renderMarkdown(input);
+    process.stdout.write(markdown);
+  }
 }
 
 main().catch((error) => {

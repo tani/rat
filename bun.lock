@@ -27,6 +27,7 @@
         "rat": "./index.ts",
       },
       "dependencies": {
+        "@rat/latex-unicode": "workspace:*",
         "@rat/markdown-unicode": "workspace:*",
       },
     },
@@ -199,9 +200,9 @@
 
     "@rat/cli": ["@rat/cli@workspace:packages/cli"],
 
-    "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/core"],
-
     "@rat/latex-unicode": ["@rat/latex-unicode@workspace:packages/latex-unicode"],
+
+    "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/core"],
 
     "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
 

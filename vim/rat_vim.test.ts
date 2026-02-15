@@ -87,6 +87,7 @@ describe("vim preview plugin", () => {
       expect(proc.exitCode).toBe(0);
       expect(requests).toContain('"method": "render"');
       expect(requests).toContain("edited-unsaved");
+      expect(requests).toMatch(/"language"\s*:\s*"markdown"/);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
