@@ -15,25 +15,28 @@ export type {
   LatexSourcemapSegment,
 } from "./sourcemap";
 
-type ParsedSpan = { value: string; end: number };
+interface ParsedSpan {
+  value: string;
+  end: number;
+}
 
-type Segment = {
+interface Segment {
   type: "text" | "inlineMath" | "displayMath";
   value: string;
   start: number;
   end: number;
-};
+}
 
-export type RenderedLatex = {
+export interface RenderedLatex {
   text: string;
   sourcemap: LatexSourcemapData;
-};
+}
 
-export type RenderLatexOptions = {
+export interface RenderLatexOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
-};
+}
 
-const INLINE_COMMANDS: ReadonlyArray<{ cmd: string; style: InlineStyle }> = [
+const INLINE_COMMANDS: readonly { cmd: string; style: InlineStyle }[] = [
   { cmd: "\\textbf", style: "bold" },
   { cmd: "\\textit", style: "italic" },
   { cmd: "\\emph", style: "italic" },
@@ -83,7 +86,7 @@ function renderInlineCommands(input: string): string {
     }
 
     if (!matched) {
-      out += input[i];
+      out += input[i] ?? "";
       i += 1;
     }
   }
@@ -228,13 +231,18 @@ export async function renderLatex(
   options: RenderLatexOptions = {},
 ): Promise<RenderedLatex> {
   const segments = splitSegments(input);
-  const renderedSegments = await Promise.all(
-    segments.map((segment) => {
-      if (segment.type === "text") return renderInlineCommands(segment.value);
-      if (segment.type === "inlineMath") return unicodeit.replace(segment.value);
-      return displayToUnicode(segment.value, options.displayRenderer);
-    }),
-  );
+  const renderedSegments: string[] = [];
+  for (const segment of segments) {
+    if (segment.type === "text") {
+      renderedSegments.push(renderInlineCommands(segment.value));
+      continue;
+    }
+    if (segment.type === "inlineMath") {
+      renderedSegments.push(unicodeit.replace(segment.value));
+      continue;
+    }
+    renderedSegments.push(await displayToUnicode(segment.value, options.displayRenderer));
+  }
 
   const text = renderedSegments.join("");
   const inputLineStarts = buildLineStarts(input);

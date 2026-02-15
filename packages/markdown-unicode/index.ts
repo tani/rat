@@ -9,10 +9,10 @@ import remarkUnicodeMath from "@rat/remark-unicode-math";
 import remarkUnicodeMermaid from "@rat/remark-unicode-mermaid";
 import remarkUnicodeTable from "@rat/remark-unicode-table";
 
-export type RenderedMarkdown = {
+export interface RenderedMarkdown {
   markdown: string;
   sourcemap: RemarkSourcemapData;
-};
+}
 
 export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
   const file = await unified()

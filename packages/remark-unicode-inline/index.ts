@@ -1,27 +1,17 @@
 import { toString } from "mdast-util-to-string";
 import type {
-  Blockquote,
-  Code,
   Delete,
   Emphasis,
-  Heading,
-  Html,
   Image,
   ImageReference,
   InlineCode,
   Link,
-  List,
-  ListItem,
   Parent,
-  Paragraph,
   Root,
   RootContent,
   Strong,
   Table,
-  TableCell,
-  TableRow,
   Text,
-  ThematicBreak,
 } from "mdast";
 import type { Node } from "unist";
 import type { Plugin } from "unified";
@@ -144,9 +134,9 @@ function transformContainerChildren<T extends { children: unknown[] }>(node: T):
 
 function transformTableNode(table: Table): Table {
   table.children = table.children.map((row) => {
-    const r = row as TableRow;
+    const r = row;
     r.children = r.children.map((cell) => {
-      const c = cell as TableCell;
+      const c = cell;
       flattenInlineChildren(c);
       return c;
     });
@@ -158,34 +148,34 @@ function transformTableNode(table: Table): Table {
 function transformNode(node: RootContent): RootContent {
   switch (node.type) {
     case "paragraph": {
-      const n = node as Paragraph;
+      const n = node;
       flattenInlineChildren(n);
       return n;
     }
     case "heading": {
-      const n = node as Heading;
+      const n = node;
       flattenInlineChildren(n);
       return n;
     }
     case "blockquote": {
-      return transformContainerChildren(node as Blockquote);
+      return transformContainerChildren(node);
     }
     case "list": {
-      const n = node as List;
+      const n = node;
       n.children = n.children.map((item) => {
-        const li = item as ListItem;
+        const li = item;
         transformContainerChildren(li);
         return li;
       });
       return n;
     }
     case "table": {
-      return transformTableNode(node as Table);
+      return transformTableNode(node);
     }
     case "html":
     case "code":
     case "thematicBreak":
-      return node as Html | Code | ThematicBreak;
+      return node;
     default:
       return node;
   }

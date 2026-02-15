@@ -1,24 +1,24 @@
-export type LatexSourcemapPoint = {
+export interface LatexSourcemapPoint {
   line: number;
   column: number;
   offset?: number;
-};
+}
 
-export type LatexSourcemapRange = {
+export interface LatexSourcemapRange {
   start: LatexSourcemapPoint;
   end: LatexSourcemapPoint;
-};
+}
 
-export type LatexSourcemapSegment = {
+export interface LatexSourcemapSegment {
   nodeType: string;
   output: LatexSourcemapRange;
   input: LatexSourcemapRange;
-};
+}
 
-export type LatexSourcemapData = {
+export interface LatexSourcemapData {
   version: 2;
   segments: LatexSourcemapSegment[];
-};
+}
 
 export function buildLineStarts(text: string): number[] {
   const starts = [0];

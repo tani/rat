@@ -3,7 +3,7 @@
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-type BuildTarget = {
+interface BuildTarget {
   target:
     | "bun-darwin-arm64"
     | "bun-darwin-x64"
@@ -11,7 +11,7 @@ type BuildTarget = {
     | "bun-linux-arm64"
     | "bun-windows-x64";
   outfile: string;
-};
+}
 
 const ROOT_DIR = import.meta.dir;
 const OUT_DIR = join(ROOT_DIR, "dist");

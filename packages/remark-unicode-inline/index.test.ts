@@ -47,7 +47,7 @@ test("remark-unicode-inline: output inline content is plain text nodes", () => {
 
   const paragraph = transformed.children[0] as {
     type: string;
-    children: Array<{ type: string; value: string }>;
+    children: { type: string; value: string }[];
   };
   expect(paragraph.type).toBe("paragraph");
   expect(paragraph.children).toHaveLength(1);

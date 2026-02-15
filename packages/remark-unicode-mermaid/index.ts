@@ -3,9 +3,9 @@ import type { Code, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
-export type RemarkUnicodeMermaidOptions = {
+export interface RemarkUnicodeMermaidOptions {
   render?: (source: string) => string | Promise<string>;
-};
+}
 
 function isMermaidCode(node: Code): boolean {
   return typeof node.lang === "string" && node.lang.toLowerCase() === "mermaid";

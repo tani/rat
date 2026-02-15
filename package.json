@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "prepare": "git config --local core.hooksPath .githooks && chmod +x .githooks/pre-commit",
-    "lint": "oxlint -D suspicious -D pedantic -D perf --deny-warnings .",
+    "lint": "eslint .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
     "test:vim": "bun test vim/rat_vim.test.ts",
@@ -17,11 +17,13 @@
     "@rat/markdown-unicode": "workspace:*"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
     "@types/bun": "latest",
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",
+    "eslint": "^9.20.1",
     "oxfmt": "^0.32.0",
-    "oxlint": "^1.47.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.24.1"
   }
 }

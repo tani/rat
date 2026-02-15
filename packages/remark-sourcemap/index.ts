@@ -8,32 +8,32 @@ import type { Point, Position } from "unist";
 import type { Root } from "mdast";
 import type { VFile } from "vfile";
 
-export type RemarkSourcemapPoint = {
+export interface RemarkSourcemapPoint {
   line: number;
   column: number;
   offset?: number;
-};
+}
 
-export type RemarkSourcemapRange = {
+export interface RemarkSourcemapRange {
   start: RemarkSourcemapPoint;
   end: RemarkSourcemapPoint;
-};
+}
 
-export type RemarkSourcemapSegment = {
+export interface RemarkSourcemapSegment {
   nodeType: string;
   output: RemarkSourcemapRange;
   input: RemarkSourcemapRange;
-};
+}
 
-export type RemarkSourcemapData = {
+export interface RemarkSourcemapData {
   version: 2;
   segments: RemarkSourcemapSegment[];
-};
+}
 
-type NodeRecord = {
+interface NodeRecord {
   node: Node;
   signature: string;
-};
+}
 
 const TRACKED_TYPES = new Set([
   "root",
@@ -116,10 +116,10 @@ function buildLcsTable(generated: NodeRecord[], current: NodeRecord[]): Uint32Ar
   return table;
 }
 
-function lcsMatch(currentNodes: NodeRecord[], generatedNodes: NodeRecord[]): Array<[Node, Node]> {
+function lcsMatch(currentNodes: NodeRecord[], generatedNodes: NodeRecord[]): [Node, Node][] {
   const table = buildLcsTable(generatedNodes, currentNodes);
   const cols = currentNodes.length + 1;
-  const pairs: Array<[Node, Node]> = [];
+  const pairs: [Node, Node][] = [];
   let i = generatedNodes.length;
   let j = currentNodes.length;
 
@@ -186,7 +186,7 @@ const remarkSourcemap: Plugin<[], Root> = function remarkSourcemap() {
     const parser = unified().use(remarkParse);
 
     const generatedMarkdown = serializer.stringify(tree);
-    const generatedTree = parser.parse(generatedMarkdown) as Root;
+    const generatedTree = parser.parse(generatedMarkdown);
 
     emitLineMap(tree, generatedTree, file);
   };

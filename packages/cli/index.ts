@@ -27,25 +27,25 @@ async function readCliInput(argv: string[]): Promise<string> {
 
 type JsonRpcId = string | number | null;
 
-type JsonRpcRequest = {
-  jsonrpc: "2.0";
+interface JsonRpcRequest {
+  jsonrpc?: string;
   id?: JsonRpcId;
   method?: string;
   params?: unknown;
-};
+}
 
-type Cursor = {
+interface Cursor {
   line: number;
   column: number;
-};
+}
 
-type RenderParams = {
+interface RenderParams {
   text: string;
   cursor?: Cursor;
   language?: "markdown" | "latex";
-};
+}
 
-type SourcemapSegment = {
+interface SourcemapSegment {
   output: {
     start: {
       line: number;
@@ -59,12 +59,12 @@ type SourcemapSegment = {
       line: number;
     };
   };
-};
+}
 
-type SourcemapData = {
+interface SourcemapData {
   version: 2;
   segments: SourcemapSegment[];
-};
+}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -124,12 +124,16 @@ function writeJsonRpcError(id: JsonRpcId, code: number, message: string): void {
 }
 
 function writeJsonRpcResult(id: JsonRpcId, result: unknown): void {
-  if (id === undefined) return;
   writeJson({
     jsonrpc: "2.0",
     id,
     result,
   });
+}
+
+function isJsonRpcRequest(value: unknown): value is JsonRpcRequest {
+  if (!isObject(value)) return false;
+  return true;
 }
 
 async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise<void> {
@@ -206,7 +210,7 @@ async function runJsonRpcMode(): Promise<void> {
   let requestQueue = Promise.resolve();
 
   const processBufferedLines = (): void => {
-    while (true) {
+    for (;;) {
       const newlineIndex = buffer.indexOf("\n");
       if (newlineIndex === -1) return;
       const line = buffer.slice(0, newlineIndex).trim();
@@ -220,7 +224,11 @@ async function runJsonRpcMode(): Promise<void> {
         writeJsonRpcError(null, -32700, "Parse error");
         continue;
       }
-      requestQueue = requestQueue.then(() => handleJsonRpcRequest(parsed as JsonRpcRequest));
+      if (!isJsonRpcRequest(parsed)) {
+        writeJsonRpcError(null, -32600, "Invalid Request");
+        continue;
+      }
+      requestQueue = requestQueue.then(() => handleJsonRpcRequest(parsed));
     }
   };
 
@@ -272,7 +280,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   const message = error instanceof Error ? (error.stack ?? error.message) : String(error);
   process.stderr.write(`${message}\n`);
   process.exit(1);

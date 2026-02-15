@@ -23,10 +23,10 @@ import stringUtilsHSource from "./libtexprintf/src/stringutils.h" with { type: "
 import texprintfCSource from "./libtexprintf/src/texprintf.c" with { type: "file" };
 import unicodeBlocksHSource from "./libtexprintf/src/unicodeblocks.h" with { type: "file" };
 
-type AssetFile = {
+interface AssetFile {
   from: string;
   to: string;
-};
+}
 
 const assetFiles: AssetFile[] = [
   { from: ffiBridgeSource, to: "ffi_bridge.c" },
@@ -78,13 +78,11 @@ async function stageAssetFile(rootDir: string, assetFile: AssetFile): Promise<vo
 }
 
 export function getStagedBridgeSourceFile(): Promise<string> {
-  if (!stagedBridgeSourcePromise) {
-    stagedBridgeSourcePromise = (async () => {
-      const rootDir = await mkdtemp(join(tmpdir(), "rat-libtexprintf-"));
-      await Promise.all(assetFiles.map((assetFile) => stageAssetFile(rootDir, assetFile)));
-      return join(rootDir, "ffi_bridge.c");
-    })();
-  }
+  stagedBridgeSourcePromise ??= (async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "rat-libtexprintf-"));
+    await Promise.all(assetFiles.map((assetFile) => stageAssetFile(rootDir, assetFile)));
+    return join(rootDir, "ffi_bridge.c");
+  })();
 
   return stagedBridgeSourcePromise;
 }

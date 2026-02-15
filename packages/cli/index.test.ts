@@ -81,8 +81,8 @@ async function runJsonRpcRenderWithRequest(request: unknown): Promise<{
     stderr: "pipe",
   });
 
-  proc.stdin.write(`${JSON.stringify(request)}\n`);
-  proc.stdin.end();
+  await proc.stdin.write(`${JSON.stringify(request)}\n`);
+  await proc.stdin.end();
 
   const out = await new Response(proc.stdout).text();
   const err = await new Response(proc.stderr).text();
@@ -230,8 +230,8 @@ describe("@rat/cli latex json-rpc", () => {
       stdout: "pipe",
       stderr: "pipe",
     });
-    proc.stdin.write(`${JSON.stringify(request)}\n`);
-    proc.stdin.end();
+    await proc.stdin.write(`${JSON.stringify(request)}\n`);
+    await proc.stdin.end();
     const out = await new Response(proc.stdout).text();
     const err = await new Response(proc.stderr).text();
     const code = await proc.exited;

@@ -4,9 +4,9 @@ import type { Code, InlineCode, Parent, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
-export type RemarkUnicodeMathOptions = {
+export interface RemarkUnicodeMathOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
-};
+}
 
 function toInlineCode(value: string): InlineCode {
   return { type: "inlineCode", value };

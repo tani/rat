@@ -18,11 +18,11 @@ function pad(text: string, width: number, align: Align): string {
 }
 
 function rowCells(row: TableRow): TableCell[] {
-  return row.children as TableCell[];
+  return row.children;
 }
 
 function renderTable(table: Table): string {
-  const rows = table.children as TableRow[];
+  const rows = table.children;
   if (rows.length === 0) return "";
 
   const colCount = Math.max(...rows.map((row) => row.children.length));
