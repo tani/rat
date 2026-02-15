@@ -8,6 +8,7 @@
     ".": "./index.ts"
   },
   "dependencies": {
+    "@mdd/bun-libtexprintf": "workspace:*",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
