@@ -225,6 +225,27 @@ describe("@rat/cli latex stdin", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  test("auto-detects latex mode for .tex file argument", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rat-cli-tex-autodetect-"));
+    const file = join(dir, "EXAMPLE_TEXT.tex");
+    try {
+      writeFileSync(file, "Term: \\(\\alpha^2 + \\beta\\)\n");
+      const proc = Bun.spawn(["bun", "packages/cli/index.ts", file], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const out = await new Response(proc.stdout).text();
+      const err = await new Response(proc.stderr).text();
+      const code = await proc.exited;
+
+      expect(code).toBe(0);
+      expect(err).toBe("");
+      expect(out).toContain("Term: α² + β");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("@rat/cli latex json-rpc", () => {

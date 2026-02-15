@@ -261,6 +261,11 @@ function resolveCliLanguage(argv: string[]): "markdown" | "latex" {
   }
   // Backward compatibility.
   if (argv.includes("--latex")) return "latex";
+  const inputFile = resolveInputFile(argv);
+  if (inputFile) {
+    const lower = inputFile.toLowerCase();
+    if (lower.endsWith(".tex") || lower.endsWith(".latex")) return "latex";
+  }
   return "markdown";
 }
 

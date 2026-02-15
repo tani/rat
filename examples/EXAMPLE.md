@@ -111,6 +111,36 @@ Use literal dollar signs like this: \$5.00.
 
 Use escaped pipes in table-like text: a \| b \| c.
 
+## Bussproofs
+
+```bussproofs
+\AXC{$A$}
+\AXC{$A \to B$}
+\RL{$\to E$}
+\BIC{$B$}
+\AXC{$B \to C$}
+\RL{$\to E$}
+\BIC{$C$}
+\AXC{$C \to D$}
+\RL{$\to E$}
+\BIC{$D$}
+```
+
+Display-math form:
+
+$$
+\begin{prooftree}
+\AXC{$P$}
+\AXC{$Q$}
+\AXC{$R$}
+\LL{$\land I$}
+\TIC{$P \land Q \land R$}
+\AXC{$(P \land Q \land R) \to S$}
+\RL{$\to E$}
+\BIC{$S$}
+\end{prooftree}
+$$
+
 ## End
 
 Final paragraph with enough text to trigger wrapping for narrow terminal widths

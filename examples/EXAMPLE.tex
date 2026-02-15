@@ -41,3 +41,29 @@ Align* environment:
 Mixed paragraph:
 When \textbf{style} and math are combined, for example $x^2$ and \(\beta\),
 output should remain plain Unicode text.
+
+Bussproofs (abbreviated commands):
+\begin{prooftree}
+\AXC{$A$}
+\AXC{$A \to B$}
+\RL{$\to E$}
+\BIC{$B$}
+\AXC{$B \to C$}
+\RL{$\to E$}
+\BIC{$C$}
+\AXC{$C \to D$}
+\RL{$\to E$}
+\BIC{$D$}
+\end{prooftree}
+
+Bussproofs (with left label and trinary inference):
+\begin{prooftree}
+\AXC{$P$}
+\AXC{$Q$}
+\AXC{$R$}
+\LL{$\land I$}
+\TIC{$P \land Q \land R$}
+\AXC{$(P \land Q \land R) \to S$}
+\RL{$\to E$}
+\BIC{$S$}
+\end{prooftree}
