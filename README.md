@@ -50,9 +50,9 @@ Plug 'tani/rat', { rtp: 'vim/' }
 
 Commands:
 
-- `:RatPreviewOpen`
-- `:RatPreviewClose`
-- `:RatPreviewToggle`
+- `:RatOpen`
+- `:RatClose`
+- `:RatToggle`
 
 Behavior:
 

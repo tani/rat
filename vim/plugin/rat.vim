@@ -294,6 +294,6 @@ augroup rat_events
   autocmd BufWipeout * call s:close_preview(str2nr(expand('<abuf>')))
 augroup END
 
-command! RatPreviewOpen call <SID>open()
-command! RatPreviewClose call <SID>close()
-command! RatPreviewToggle call <SID>toggle()
+command! RatOpen call <SID>open()
+command! RatClose call <SID>close()
+command! RatToggle call <SID>toggle()
