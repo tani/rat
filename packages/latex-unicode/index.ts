@@ -1,13 +1,33 @@
 import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import unicodeit from "unicodeit";
+import { type InlineStyle, stylizeMath } from "./style";
+import {
+  buildLineStarts,
+  type LatexSourcemapData,
+  type LatexSourcemapSegment,
+  rangeFromOffsets,
+} from "./sourcemap";
 
-type InlineStyle = "plain" | "italic" | "bold" | "boldItalic";
+export type {
+  LatexSourcemapData,
+  LatexSourcemapPoint,
+  LatexSourcemapRange,
+  LatexSourcemapSegment,
+} from "./sourcemap";
+
 type ParsedSpan = { value: string; end: number };
 
-type Segment =
-  | { type: "text"; value: string }
-  | { type: "inlineMath"; value: string }
-  | { type: "displayMath"; value: string };
+type Segment = {
+  type: "text" | "inlineMath" | "displayMath";
+  value: string;
+  start: number;
+  end: number;
+};
+
+export type RenderedLatex = {
+  text: string;
+  sourcemap: LatexSourcemapData;
+};
 
 export type RenderLatexOptions = {
   displayRenderer?: (latex: string) => string | Promise<string>;
@@ -20,36 +40,6 @@ const INLINE_COMMANDS: ReadonlyArray<{ cmd: string; style: InlineStyle }> = [
 ];
 
 const DISPLAY_ENVS = ["aligned", "align*", "align"] as const;
-
-function mapMathAlpha(ch: string, style: InlineStyle): string {
-  const cp = ch.codePointAt(0);
-  if (cp === undefined) return ch;
-
-  if (style === "bold") {
-    if (cp >= 0x41 && cp <= 0x5a) return String.fromCodePoint(0x1d5d4 + (cp - 0x41));
-    if (cp >= 0x61 && cp <= 0x7a) return String.fromCodePoint(0x1d5ee + (cp - 0x61));
-    if (cp >= 0x30 && cp <= 0x39) return String.fromCodePoint(0x1d7ec + (cp - 0x30));
-  }
-
-  if (style === "italic") {
-    if (cp >= 0x41 && cp <= 0x5a) return String.fromCodePoint(0x1d608 + (cp - 0x41));
-    if (cp >= 0x61 && cp <= 0x7a) return String.fromCodePoint(0x1d622 + (cp - 0x61));
-  }
-
-  if (style === "boldItalic") {
-    if (cp >= 0x41 && cp <= 0x5a) return String.fromCodePoint(0x1d63c + (cp - 0x41));
-    if (cp >= 0x61 && cp <= 0x7a) return String.fromCodePoint(0x1d656 + (cp - 0x61));
-  }
-
-  return ch;
-}
-
-function stylizeMath(value: string, style: InlineStyle): string {
-  if (style === "plain") return value;
-  let out = "";
-  for (const ch of value) out += mapMathAlpha(ch, style);
-  return out;
-}
 
 function parseBraced(
   source: string,
@@ -68,10 +58,7 @@ function parseBraced(
     if (ch === "{") depth += 1;
     else if (ch === "}") depth -= 1;
     if (depth === 0) {
-      return {
-        content: source.slice(openBraceIndex + 1, i),
-        end: i + 1,
-      };
+      return { content: source.slice(openBraceIndex + 1, i), end: i + 1 };
     }
     i += 1;
   }
@@ -89,8 +76,7 @@ function renderInlineCommands(input: string): string {
       if (!input.startsWith(cmd, i)) continue;
       const parsed = parseBraced(input, i + cmd.length);
       if (!parsed) break;
-      const inner = renderInlineCommands(parsed.content);
-      out += stylizeMath(inner, style);
+      out += stylizeMath(renderInlineCommands(parsed.content), style);
       i = parsed.end;
       matched = true;
       break;
@@ -138,7 +124,7 @@ function tryParseEnv(source: string, from: number): ParsedSpan | null {
   return null;
 }
 
-function tryParseDoubleDollar(input: string, from: number): { value: string; end: number } | null {
+function tryParseDoubleDollar(input: string, from: number): ParsedSpan | null {
   if (!input.startsWith("$$", from) || isEscapedDollar(input, from)) return null;
   const end = findUnescaped(input, "$$", from + 2);
   if (end === -1) return null;
@@ -167,18 +153,6 @@ function tryParseInlineParen(input: string, from: number): ParsedSpan | null {
   return { value: input.slice(from + 2, end), end: end + 2 };
 }
 
-function tryParseDisplayAt(input: string, index: number): ParsedSpan | null {
-  return (
-    tryParseEnv(input, index) ??
-    tryParseDoubleDollar(input, index) ??
-    tryParseBracketDisplay(input, index)
-  );
-}
-
-function tryParseInlineMathAt(input: string, index: number): ParsedSpan | null {
-  return tryParseInlineDollar(input, index) ?? tryParseInlineParen(input, index);
-}
-
 function splitSegments(input: string): Segment[] {
   const segments: Segment[] = [];
   let i = 0;
@@ -186,24 +160,25 @@ function splitSegments(input: string): Segment[] {
 
   const pushText = (end: number): void => {
     if (end > textStart) {
-      segments.push({ type: "text", value: input.slice(textStart, end) });
+      segments.push({ type: "text", value: input.slice(textStart, end), start: textStart, end });
     }
   };
 
   while (i < input.length) {
-    const display = tryParseDisplayAt(input, i);
+    const display =
+      tryParseEnv(input, i) ?? tryParseDoubleDollar(input, i) ?? tryParseBracketDisplay(input, i);
     if (display) {
       pushText(i);
-      segments.push({ type: "displayMath", value: display.value });
+      segments.push({ type: "displayMath", value: display.value, start: i, end: display.end });
       i = display.end;
       textStart = i;
       continue;
     }
 
-    const inline = tryParseInlineMathAt(input, i);
+    const inline = tryParseInlineDollar(input, i) ?? tryParseInlineParen(input, i);
     if (inline) {
       pushText(i);
-      segments.push({ type: "inlineMath", value: inline.value });
+      segments.push({ type: "inlineMath", value: inline.value, start: i, end: inline.end });
       i = inline.end;
       textStart = i;
       continue;
@@ -224,30 +199,22 @@ function isLikelyFailedLibtexprintf(input: string, output: string): boolean {
   return false;
 }
 
-function normalizeDisplayLatex(value: string): string {
-  return value.replaceAll("\r\n", "\n").trim();
-}
-
 async function displayToUnicode(
   value: string,
   displayRenderer?: (latex: string) => string | Promise<string>,
 ): Promise<string> {
-  const input = normalizeDisplayLatex(value);
+  const input = value.replaceAll("\r\n", "\n").trim();
   const render = async (latex: string): Promise<string> =>
     displayRenderer ? await displayRenderer(latex) : (await getLibtexprintfRenderer())(latex);
 
   try {
     const output = await render(input);
-    if (!isLikelyFailedLibtexprintf(input, output)) {
-      return output;
-    }
+    if (!isLikelyFailedLibtexprintf(input, output)) return output;
 
     const flattened = input.replaceAll("\n", " ");
     if (flattened !== input) {
       const retry = await render(flattened);
-      if (!isLikelyFailedLibtexprintf(flattened, retry)) {
-        return retry;
-      }
+      if (!isLikelyFailedLibtexprintf(flattened, retry)) return retry;
     }
 
     return unicodeit.replace(input);
@@ -259,18 +226,40 @@ async function displayToUnicode(
 export async function renderLatex(
   input: string,
   options: RenderLatexOptions = {},
-): Promise<string> {
+): Promise<RenderedLatex> {
   const segments = splitSegments(input);
-  const rendered = await Promise.all(
+  const renderedSegments = await Promise.all(
     segments.map((segment) => {
-      if (segment.type === "text") {
-        return renderInlineCommands(segment.value);
-      }
-      if (segment.type === "inlineMath") {
-        return unicodeit.replace(segment.value);
-      }
+      if (segment.type === "text") return renderInlineCommands(segment.value);
+      if (segment.type === "inlineMath") return unicodeit.replace(segment.value);
       return displayToUnicode(segment.value, options.displayRenderer);
     }),
   );
-  return rendered.join("");
+
+  const text = renderedSegments.join("");
+  const inputLineStarts = buildLineStarts(input);
+  const outputLineStarts = buildLineStarts(text);
+  const sourcemapSegments: LatexSourcemapSegment[] = [];
+
+  let outputOffset = 0;
+  for (let i = 0; i < segments.length; i += 1) {
+    const sourceSegment = segments[i];
+    const rendered = renderedSegments[i] ?? "";
+    const outputStart = outputOffset;
+    const outputEnd = outputOffset + rendered.length;
+    outputOffset = outputEnd;
+
+    if (!sourceSegment || rendered.length === 0) continue;
+
+    sourcemapSegments.push({
+      nodeType: sourceSegment.type,
+      input: rangeFromOffsets(sourceSegment.start, sourceSegment.end, inputLineStarts),
+      output: rangeFromOffsets(outputStart, outputEnd, outputLineStarts),
+    });
+  }
+
+  return {
+    text,
+    sourcemap: { version: 2, segments: sourcemapSegments },
+  };
 }
