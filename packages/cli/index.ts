@@ -2,7 +2,7 @@
 import * as arktype from "arktype";
 import { renderLatex } from "@rat/latex-unicode";
 import { renderMarkdown } from "@rat/markdown-unicode";
-import { unicodeSourcemap } from "@rat/unicode-sourcemap";
+import { createUnicodeSourcemap } from "@rat/unicode-sourcemap";
 
 async function readStdin(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();
@@ -39,6 +39,15 @@ interface JsonRpcRequest {
 interface Cursor {
   line: number;
   column: number;
+}
+
+interface CursorMapping {
+  sourceLine: number;
+  sourceColumn: number;
+  renderedLine: number;
+  renderedColumn: number;
+  strategy: string;
+  confidence: number;
 }
 
 interface RenderParams {
@@ -81,48 +90,21 @@ function parseRenderParams(value: unknown): RenderParams | undefined {
   };
 }
 
-function buildLineStarts(text: string): number[] {
-  const starts = [0];
-  for (let i = 0; i < text.length; i += 1) {
-    if (text[i] === "\n") starts.push(i + 1);
-  }
-  return starts;
-}
-
-function offsetToLine(lineStarts: number[], offset: number): number {
-  let low = 0;
-  let high = lineStarts.length - 1;
-  let best = 0;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const lineStart = lineStarts[mid] ?? 0;
-    if (lineStart <= offset) {
-      best = mid;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-
-  return best + 1;
-}
-
-function cursorToOffset(text: string, cursor: Cursor): number {
-  if (text.length === 0) return 0;
-  const lineStarts = buildLineStarts(text);
-  const lineIndex = Math.min(Math.max(0, cursor.line - 1), lineStarts.length - 1);
-  const lineStart = lineStarts[lineIndex] ?? 0;
-  const nextLineStart = lineStarts[lineIndex + 1] ?? text.length;
-  const lineEnd =
-    nextLineStart > 0 && text[nextLineStart - 1] === "\n" ? nextLineStart - 1 : nextLineStart;
-  return Math.min(lineStart + Math.max(0, cursor.column - 1), lineEnd);
-}
-
-function resolvePreviewLine(sourceText: string, outputText: string, cursor: Cursor): number {
-  const sourceOffset = cursorToOffset(sourceText, cursor);
-  const outputOffset = unicodeSourcemap(sourceText, outputText, sourceOffset);
-  return offsetToLine(buildLineStarts(outputText), outputOffset);
+function resolveCursorMapping(
+  sourceText: string,
+  renderedText: string,
+  cursor: Cursor,
+): CursorMapping {
+  const mapper = createUnicodeSourcemap(sourceText, renderedText);
+  const mapped = mapper.mapCursor(cursor);
+  return {
+    sourceLine: mapped.sourceLine,
+    sourceColumn: mapped.sourceColumn,
+    renderedLine: mapped.targetLine,
+    renderedColumn: mapped.targetColumn,
+    strategy: mapped.strategy,
+    confidence: mapped.confidence,
+  };
 }
 
 function writeJson(value: unknown): void {
@@ -161,24 +143,24 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
 
   if (params.language === "latex") {
     const rendered = await renderLatex(params.text);
-    const previewLine = params.cursor
-      ? resolvePreviewLine(params.text, rendered.text, params.cursor)
+    const cursorMapping = params.cursor
+      ? resolveCursorMapping(params.text, rendered.text, params.cursor)
       : null;
     writeJsonRpcResult(id, {
       text: rendered.text,
-      previewLine,
+      cursorMapping,
     });
     return;
   }
 
   const rendered = await renderMarkdown(params.text);
-  const previewLine = params.cursor
-    ? resolvePreviewLine(params.text, rendered.markdown, params.cursor)
+  const cursorMapping = params.cursor
+    ? resolveCursorMapping(params.text, rendered.markdown, params.cursor)
     : null;
 
   writeJsonRpcResult(id, {
     text: rendered.markdown,
-    previewLine,
+    cursorMapping,
   });
 }
 

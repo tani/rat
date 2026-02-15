@@ -23,21 +23,6 @@ function! s:echoerr(msg) abort
   echohl None
 endfunction
 
-function! s:line_based_output(state, src_line) abort
-  if !has_key(a:state, 'last_sourcemap')
-    return a:src_line
-  endif
-  let l:segments = get(a:state.last_sourcemap, 'segments', [])
-  for l:segment in l:segments
-    let l:in_start = get(get(get(l:segment, 'input', {}), 'start', {}), 'line', 0)
-    let l:in_end = get(get(get(l:segment, 'input', {}), 'end', {}), 'line', 0)
-    if l:in_start <= a:src_line && a:src_line <= l:in_end
-      return get(get(get(l:segment, 'output', {}), 'start', {}), 'line', a:src_line)
-    endif
-  endfor
-  return a:src_line
-endfunction
-
 function! s:sync_preview_cursor(src_bufnr) abort
   let l:key = string(a:src_bufnr)
   if !has_key(s:states, l:key)
@@ -48,8 +33,8 @@ function! s:sync_preview_cursor(src_bufnr) abort
   if l:preview_win <= 0 || win_id2win(l:preview_win) == 0
     return
   endif
-  let l:src_pos = getcurpos()
-  let l:out_line = s:line_based_output(l:state, l:src_pos[1])
+  let l:mapping = get(l:state, 'last_cursor_mapping', {})
+  let l:out_line = get(l:mapping, 'renderedLine', 1)
   call win_execute(l:preview_win, 'call cursor(' . l:out_line . ', 1) | normal! zz')
 endfunction
 
@@ -95,7 +80,7 @@ function! s:handle_message(src_bufnr, msg) abort
 
   let l:state = s:states[l:key]
   let l:markdown = get(l:parsed.result, 'text', '')
-  let l:state.last_sourcemap = get(l:parsed.result, 'sourcemap', {'version': 2, 'segments': []})
+  let l:state.last_cursor_mapping = get(l:parsed.result, 'cursorMapping', {})
   call s:replace_preview_buffer(l:state.preview_bufnr, l:markdown)
   let s:states[l:key] = l:state
 
@@ -253,7 +238,7 @@ function! s:open() abort
         \ 'preview_bufnr': l:preview_bufnr,
         \ 'request_id': 0,
         \ 'sending': 0,
-        \ 'last_sourcemap': {'version': 2, 'segments': []},
+        \ 'last_cursor_mapping': {},
         \ }
 
   if has('nvim')
@@ -300,7 +285,7 @@ endfunction
 augroup rat_events
   autocmd!
   autocmd TextChanged,TextChangedI * call s:maybe_refresh_for_current_buffer()
-  autocmd CursorMoved,CursorMovedI * call s:maybe_cursor_sync_for_current_buffer()
+  autocmd CursorMoved,CursorMovedI * call s:maybe_refresh_for_current_buffer() | call s:maybe_cursor_sync_for_current_buffer()
   autocmd BufWipeout * call s:close_preview(str2nr(expand('<abuf>')))
 augroup END
 

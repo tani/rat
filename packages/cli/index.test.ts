@@ -9,7 +9,7 @@ const JsonRpcRenderResultSchema = arktype.type({
   id: "number",
   result: {
     text: "string",
-    "previewLine?": "number | null",
+    "cursorMapping?": "unknown",
   },
 });
 
@@ -47,7 +47,14 @@ async function runJsonRpcRender(): Promise<{
     id: number;
     result: {
       text: string;
-      previewLine: number | null;
+      cursorMapping: {
+        sourceLine: number;
+        sourceColumn: number;
+        renderedLine: number;
+        renderedColumn: number;
+        strategy: string;
+        confidence: number;
+      } | null;
     };
   };
   err: string;
@@ -71,7 +78,14 @@ async function runJsonRpcRenderWithRequest(request: unknown): Promise<{
     id: number;
     result: {
       text: string;
-      previewLine: number | null;
+      cursorMapping: {
+        sourceLine: number;
+        sourceColumn: number;
+        renderedLine: number;
+        renderedColumn: number;
+        strategy: string;
+        confidence: number;
+      } | null;
     };
   };
   err: string;
@@ -99,19 +113,52 @@ function parseJsonRpcResult(line: string): {
   id: number;
   result: {
     text: string;
-    previewLine: number | null;
+    cursorMapping: {
+      sourceLine: number;
+      sourceColumn: number;
+      renderedLine: number;
+      renderedColumn: number;
+      strategy: string;
+      confidence: number;
+    } | null;
   };
 } {
+  const isCursorMapping = (
+    value: unknown,
+  ): value is {
+    sourceLine: number;
+    sourceColumn: number;
+    renderedLine: number;
+    renderedColumn: number;
+    strategy: string;
+    confidence: number;
+  } => {
+    if (!value || typeof value !== "object") return false;
+    return (
+      typeof Reflect.get(value, "sourceLine") === "number" &&
+      typeof Reflect.get(value, "sourceColumn") === "number" &&
+      typeof Reflect.get(value, "renderedLine") === "number" &&
+      typeof Reflect.get(value, "renderedColumn") === "number" &&
+      typeof Reflect.get(value, "strategy") === "string" &&
+      typeof Reflect.get(value, "confidence") === "number"
+    );
+  };
+
   const parsed: unknown = JSON.parse(line);
   const validated = JsonRpcRenderResultSchema(parsed);
   if (validated instanceof arktype.type.errors) {
     throw new Error("Invalid JSON-RPC result payload");
   }
+
+  const cursorMapping = isCursorMapping(validated.result.cursorMapping)
+    ? validated.result.cursorMapping
+    : null;
+
   return {
     ...validated,
     result: {
       ...validated.result,
-      previewLine: validated.result.previewLine ?? null,
+      cursorMapping,
     },
   };
 }
@@ -135,7 +182,26 @@ describe("@rat/cli markdown stdin/json-rpc", () => {
     expect(parsed.id).toBe(1);
     expect(parsed.result.text).toContain("Title\n=====");
     expect(parsed.result.text).toContain("𝘢𝘣𝘤");
-    expect(typeof parsed.result.previewLine).toBe("number");
+    expect(typeof parsed.result.cursorMapping?.renderedLine).toBe("number");
+  });
+
+  test("maps heading cursors to rendered heading lines around transformed blocks", async () => {
+    const request = {
+      jsonrpc: "2.0",
+      id: 3,
+      method: "render",
+      params: {
+        text: "## Table\\n\\n| A | B |\\n| - | - |\\n| x | y |\\n\\n## Horizontal Rule\\n\\n---\\n",
+        cursor: { line: 7, column: 1 },
+      },
+    };
+    const { parsed, err, code } = await runJsonRpcRenderWithRequest(request);
+
+    expect(code).toBe(0);
+    expect(err).toBe("");
+    const line = parsed.result.cursorMapping?.renderedLine ?? 1;
+    const renderedLine = parsed.result.text.split("\n")[line - 1] ?? "";
+    expect(renderedLine).toContain("Horizontal Rule");
   });
 
   test("supports --language=markdown from stdin", async () => {
@@ -260,6 +326,6 @@ describe("@rat/cli latex json-rpc", () => {
     expect(parsed.jsonrpc).toBe("2.0");
     expect(parsed.id).toBe(2);
     expect(parsed.result.text).toContain("A: α+β");
-    expect(typeof parsed.result.previewLine).toBe("number");
+    expect(typeof parsed.result.cursorMapping?.renderedLine).toBe("number");
   });
 });

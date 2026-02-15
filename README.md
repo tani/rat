@@ -107,7 +107,7 @@ Commands:
 
 Behavior:
 
-- Live preview updates on edit (`TextChanged`, `TextChangedI`)
+- Live preview updates on edit and cursor move (`TextChanged`, `TextChangedI`, `CursorMoved`, `CursorMovedI`)
 - Cursor sync to preview (`CursorMoved`, `CursorMovedI`)
 - Sends JSON-RPC `params.language` automatically:
   - `latex` for `tex`, `plaintex`, `latex`
@@ -135,7 +135,23 @@ Example request:
 Example response:
 
 ```json
-{"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β","sourcemap":{"version":2,"segments":[{"nodeType":"inlineMath","output":{"start":{"line":1,"column":4},"end":{"line":1,"column":8}},"input":{"start":{"line":1,"column":4},"end":{"line":1,"column":17}}}]},"previewLine":1}}
+{"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β","cursorMapping":{"sourceLine":1,"sourceColumn":1,"renderedLine":1,"renderedColumn":1,"strategy":"line-anchor","confidence":1}}}
+```
+
+`previewLine` and `sourcemap` were removed in favor of `cursorMapping`.
+
+## Unicode Sourcemap API
+
+`@rat/unicode-sourcemap` now exposes a mapper object API:
+
+```ts
+import { createUnicodeSourcemap } from "@rat/unicode-sourcemap";
+
+const mapper = createUnicodeSourcemap(sourceText, renderedText);
+const offset = mapper.mapOffset(42);
+const cursor = mapper.mapCursor({ line: 10, column: 1 });
+const line = mapper.mapLine(10);
+const lines = mapper.mapLines();
 ```
 
 ## Development

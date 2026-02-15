@@ -18,7 +18,7 @@ function writeMockMdd(tempDir: string): void {
     '  if [ -z "$id" ]; then',
     "    id=1",
     "  fi",
-    '  printf \'{"jsonrpc":"2.0","id":%s,"result":{"text":"Rendered Preview\\\\n\\\\nline x\\\\n","sourcemap":{"version":2,"segments":[{"nodeType":"paragraph","input":{"start":{"line":1,"column":1},"end":{"line":200,"column":1}},"output":{"start":{"line":10,"column":1},"end":{"line":10,"column":1}}}]},"previewLine":10}}\\\\n\' "$id"',
+    '  printf \'{"jsonrpc":"2.0","id":%s,"result":{"text":"Rendered Preview\\\\n\\\\nline x\\\\n","cursorMapping":{"sourceLine":1,"sourceColumn":1,"renderedLine":2,"renderedColumn":1,"strategy":"line-anchor","confidence":1}}}\\\\n\' "$id"',
     "done",
     "",
   ].join("\n");
