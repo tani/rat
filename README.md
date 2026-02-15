@@ -2,6 +2,8 @@
 
 `rat` stands for **Render All Text** (at least, that is one way to read it): a lightweight CLI that turns Markdown and LaTeX into terminal-friendly Unicode text, with a Vim/Neovim plugin for live JSON-RPC rendering.
 
+For best Unicode glyph rendering in terminals and editors, JuliaMono is recommended.
+
 ## Features
 
 - Markdown to Unicode/plain-text output
