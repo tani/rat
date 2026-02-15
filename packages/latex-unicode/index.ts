@@ -82,6 +82,28 @@ function parseVerb(source: string, from: number): { content: string; end: number
   return { content: source.slice(contentStart, end), end: end + 1 };
 }
 
+function stripLatexComments(source: string): string {
+  let out = "";
+  let i = 0;
+  while (i < source.length) {
+    const verb = parseVerb(source, i);
+    if (verb) {
+      out += source.slice(i, verb.end);
+      i = verb.end;
+      continue;
+    }
+    const ch = source[i] ?? "";
+    if (ch === "%" && !isEscaped(source, i)) {
+      i += 1;
+      while (i < source.length && source[i] !== "\n") i += 1;
+      continue;
+    }
+    out += ch;
+    i += 1;
+  }
+  return out;
+}
+
 function renderInlineCommands(input: string): string {
   let out = "";
   let i = 0;
@@ -114,7 +136,7 @@ function renderInlineCommands(input: string): string {
   return out;
 }
 
-function isEscapedDollar(source: string, index: number): boolean {
+function isEscaped(source: string, index: number): boolean {
   let backslashes = 0;
   let i = index - 1;
   while (i >= 0 && source[i] === "\\") {
@@ -129,7 +151,7 @@ function findUnescaped(source: string, needle: string, from: number): number {
   while (i < source.length) {
     const at = source.indexOf(needle, i);
     if (at === -1) return -1;
-    if (!isEscapedDollar(source, at)) return at;
+    if (!isEscaped(source, at)) return at;
     i = at + needle.length;
   }
   return -1;
@@ -148,7 +170,7 @@ function tryParseEnv(source: string, from: number): ParsedSpan | null {
 }
 
 function tryParseDoubleDollar(input: string, from: number): ParsedSpan | null {
-  if (!input.startsWith("$$", from) || isEscapedDollar(input, from)) return null;
+  if (!input.startsWith("$$", from) || isEscaped(input, from)) return null;
   const end = findUnescaped(input, "$$", from + 2);
   if (end === -1) return null;
   return { value: input.slice(from + 2, end), end: end + 2 };
@@ -162,8 +184,7 @@ function tryParseBracketDisplay(input: string, from: number): ParsedSpan | null 
 }
 
 function tryParseInlineDollar(input: string, from: number): ParsedSpan | null {
-  if (input[from] !== "$" || isEscapedDollar(input, from) || input.startsWith("$$", from))
-    return null;
+  if (input[from] !== "$" || isEscaped(input, from) || input.startsWith("$$", from)) return null;
   const end = findUnescaped(input, "$", from + 1);
   if (end === -1 || input.startsWith("$$", end)) return null;
   return { value: input.slice(from + 1, end), end: end + 1 };
@@ -250,7 +271,8 @@ export async function renderLatex(
   input: string,
   options: RenderLatexOptions = {},
 ): Promise<RenderedLatex> {
-  const segments = splitSegments(input);
+  const normalizedInput = stripLatexComments(input);
+  const segments = splitSegments(normalizedInput);
   const renderedSegments: string[] = [];
   for (const segment of segments) {
     if (segment.type === "text") {
@@ -265,7 +287,7 @@ export async function renderLatex(
   }
 
   const text = renderedSegments.join("");
-  const inputLineStarts = buildLineStarts(input);
+  const inputLineStarts = buildLineStarts(normalizedInput);
   const outputLineStarts = buildLineStarts(text);
   const sourcemapSegments: LatexSourcemapSegment[] = [];
 

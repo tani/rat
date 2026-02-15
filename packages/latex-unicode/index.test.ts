@@ -26,6 +26,17 @@ describe("latex-unicode inline", () => {
     const out = await renderLatex("Code: \\verb|Abc123| and \\verb*+Xy9+.");
     expect(out.text).toContain("Code: 𝙰𝚋𝚌𝟷𝟸𝟹 and 𝚇𝚢𝟿.");
   });
+
+  test("skips latex comments during rendering", async () => {
+    const out = await renderLatex("A % comment here\nB \\% kept\nC");
+    expect(out.text).toContain("A \nB \\% kept\nC");
+    expect(out.text).not.toContain("comment here");
+  });
+
+  test("keeps percent inside \\verb while skipping normal comments", async () => {
+    const out = await renderLatex("Code: \\verb|a%b| % tail\nDone");
+    expect(out.text).toContain("Code: 𝚊%𝚋 \nDone");
+  });
 });
 
 describe("latex-unicode display", () => {

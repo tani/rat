@@ -1,0 +1,14 @@
+{
+  "name": "@rat/bussproofs-unicode",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "arktype": "^2.1.29",
+    "unicodeit": "^0.7.5"
+  }
+}

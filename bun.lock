@@ -23,6 +23,14 @@
       "name": "@rat/bun-libtexprintf",
       "version": "0.0.0",
     },
+    "packages/bussproofs-unicode": {
+      "name": "@rat/bussproofs-unicode",
+      "version": "0.0.0",
+      "dependencies": {
+        "arktype": "^2.1.29",
+        "unicodeit": "^0.7.5",
+      },
+    },
     "packages/cli": {
       "name": "@rat/cli",
       "version": "0.0.0",
@@ -209,6 +217,8 @@
     "@oxfmt/binding-win32-x64-msvc": ["@oxfmt/binding-win32-x64-msvc@0.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-fF8VIOeligq+mA6KfKvWtFRXbf0EFy73TdR6ZnNejdJRM8VWN1e3QFhYgIwD7O8jBrQsd7EJbUpkAr/YlUOokg=="],
 
     "@rat/bun-libtexprintf": ["@rat/bun-libtexprintf@workspace:packages/bun-libtexprintf"],
+
+    "@rat/bussproofs-unicode": ["@rat/bussproofs-unicode@workspace:packages/bussproofs-unicode"],
 
     "@rat/cli": ["@rat/cli@workspace:packages/cli"],
 
