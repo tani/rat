@@ -1,5 +1,6 @@
 import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import { renderBussproofs } from "@rat/bussproofs-unicode";
+import memoizeOne from "memoize-one";
 import unicodeit from "unicodeit";
 import { type InlineStyle, stylizeMath } from "./style";
 
@@ -23,12 +24,7 @@ export interface RenderLatexOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
-let libtexprintfRendererPromise: ReturnType<typeof getLibtexprintfRenderer> | undefined;
-
-function getCachedLibtexprintfRenderer(): ReturnType<typeof getLibtexprintfRenderer> {
-  libtexprintfRendererPromise ??= getLibtexprintfRenderer();
-  return libtexprintfRendererPromise;
-}
+const getCachedLibtexprintfRenderer = memoizeOne(getLibtexprintfRenderer);
 
 const INLINE_COMMANDS: readonly { cmd: string; style: InlineStyle }[] = [
   { cmd: "\\textbf", style: "bold" },

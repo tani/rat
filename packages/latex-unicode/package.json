@@ -10,6 +10,7 @@
   "dependencies": {
     "@rat/bussproofs-unicode": "workspace:*",
     "@rat/bun-libtexprintf": "workspace:*",
+    "memoize-one": "^6.0.0",
     "unicodeit": "^0.7.5"
   }
 }

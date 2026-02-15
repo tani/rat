@@ -1,3 +1,5 @@
+import memoizeOne from "memoize-one";
+
 const COMBINING_STRIKE = 0x0336;
 const COMBINING_UNDERLINE = 0x0332;
 
@@ -43,6 +45,38 @@ interface NormalizedString {
 function at(matrix: Int32Array[], row: number, col: number): number {
   return matrix[row]?.[col] ?? 0;
 }
+
+function buildEditDistanceTable(a: string, b: string): Int32Array[] {
+  const m = a.length;
+  const n = b.length;
+  const dp: Int32Array[] = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+
+  for (let i = 0; i <= m; i++) {
+    const row = dp[i];
+    if (row) row[0] = i;
+  }
+  if (dp[0]) {
+    const firstRow = dp[0];
+    for (let j = 0; j <= n; j++) firstRow[j] = j;
+  }
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const row = dp[i];
+      if (!row) continue;
+      row[j] = Math.min(
+        at(dp, i - 1, j) + 1, // deletion
+        at(dp, i, j - 1) + 1, // insertion
+        at(dp, i - 1, j - 1) + cost, // substitution
+      );
+    }
+  }
+
+  return dp;
+}
+
+const getEditDistanceTable = memoizeOne(buildEditDistanceTable);
 
 function normalize(s: string): NormalizedString {
   let text = "";
@@ -90,35 +124,10 @@ function coreTextSourcemap(a: string, b: string, apos: number): number {
     return b.length;
   }
 
-  const m = a.length;
-  const n = b.length;
+  const dp = getEditDistanceTable(a, b);
 
-  const dp: Int32Array[] = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
-
-  for (let i = 0; i <= m; i++) {
-    const row = dp[i];
-    if (row) row[0] = i;
-  }
-  if (dp[0]) {
-    const firstRow = dp[0];
-    for (let j = 0; j <= n; j++) firstRow[j] = j;
-  }
-
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      const row = dp[i];
-      if (!row) continue;
-      row[j] = Math.min(
-        at(dp, i - 1, j) + 1, // deletion
-        at(dp, i, j - 1) + 1, // insertion
-        at(dp, i - 1, j - 1) + cost, // substitution
-      );
-    }
-  }
-
-  let i = m;
-  let j = n;
+  let i = a.length;
+  let j = b.length;
 
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0) {

@@ -22,6 +22,9 @@
     "packages/bun-libtexprintf": {
       "name": "@rat/bun-libtexprintf",
       "version": "0.0.0",
+      "dependencies": {
+        "memoize-one": "^6.0.0",
+      },
     },
     "packages/bussproofs-unicode": {
       "name": "@rat/bussproofs-unicode",
@@ -40,6 +43,7 @@
       "dependencies": {
         "@rat/latex-unicode": "workspace:*",
         "@rat/markdown-unicode": "workspace:*",
+        "@rat/unicode-sourcemap": "workspace:*",
         "arktype": "^2.1.29",
       },
     },
@@ -49,6 +53,7 @@
       "dependencies": {
         "@rat/bun-libtexprintf": "workspace:*",
         "@rat/bussproofs-unicode": "workspace:*",
+        "memoize-one": "^6.0.0",
         "unicodeit": "^0.7.5",
       },
     },
@@ -56,7 +61,6 @@
       "name": "@rat/markdown-unicode",
       "version": "0.0.0",
       "dependencies": {
-        "@rat/remark-sourcemap": "workspace:*",
         "@rat/remark-unicode-bussproofs": "workspace:*",
         "@rat/remark-unicode-codeblock": "workspace:*",
         "@rat/remark-unicode-inline": "workspace:*",
@@ -70,19 +74,6 @@
         "remark-parse": "^11.0.0",
         "remark-stringify": "^11.0.0",
         "unified": "^11.0.5",
-      },
-    },
-    "packages/remark-sourcemap": {
-      "name": "@rat/remark-sourcemap",
-      "version": "0.0.0",
-      "dependencies": {
-        "arktype": "^2.1.29",
-        "mdast-util-to-string": "^4.0.0",
-        "remark-parse": "^11.0.0",
-        "remark-stringify": "^11.0.0",
-        "unified": "^11.0.5",
-        "unist-util-visit": "^5.1.0",
-        "vfile": "^6.0.3",
       },
     },
     "packages/remark-unicode-bussproofs": {
@@ -126,6 +117,7 @@
       "dependencies": {
         "@rat/bun-libtexprintf": "workspace:*",
         "arktype": "^2.1.29",
+        "memoize-one": "^6.0.0",
         "remark-math": "^6.0.0",
         "remark-parse": "^11.0.0",
         "remark-stringify": "^11.0.0",
@@ -166,6 +158,13 @@
         "remark-stringify": "^11.0.0",
         "unified": "^11.0.5",
         "unist-util-visit": "^5.1.0",
+      },
+    },
+    "packages/unicode-sourcemap": {
+      "name": "@rat/unicode-sourcemap",
+      "version": "0.0.0",
+      "dependencies": {
+        "memoize-one": "^6.0.0",
       },
     },
   },
@@ -252,8 +251,6 @@
 
     "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/markdown-unicode"],
 
-    "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
-
     "@rat/remark-unicode-bussproofs": ["@rat/remark-unicode-bussproofs@workspace:packages/remark-unicode-bussproofs"],
 
     "@rat/remark-unicode-codeblock": ["@rat/remark-unicode-codeblock@workspace:packages/remark-unicode-codeblock"],
@@ -267,6 +264,8 @@
     "@rat/remark-unicode-raw": ["@rat/remark-unicode-raw@workspace:packages/remark-unicode-raw"],
 
     "@rat/remark-unicode-table": ["@rat/remark-unicode-table@workspace:packages/remark-unicode-table"],
+
+    "@rat/unicode-sourcemap": ["@rat/unicode-sourcemap@workspace:packages/unicode-sourcemap"],
 
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
@@ -471,6 +470,8 @@
     "mdast-util-to-markdown": ["mdast-util-to-markdown@2.1.2", "", { "dependencies": { "@types/mdast": "^4.0.0", "@types/unist": "^3.0.0", "longest-streak": "^3.0.0", "mdast-util-phrasing": "^4.0.0", "mdast-util-to-string": "^4.0.0", "micromark-util-classify-character": "^2.0.0", "micromark-util-decode-string": "^2.0.0", "unist-util-visit": "^5.0.0", "zwitch": "^2.0.0" } }, "sha512-xj68wMTvGXVOKonmog6LwyJKrYXZPvlwabaryTjLh9LuvovB/KAH+kvi8Gjj+7rJjsFi23nkUxRQv1KqSroMqA=="],
 
     "mdast-util-to-string": ["mdast-util-to-string@4.0.0", "", { "dependencies": { "@types/mdast": "^4.0.0" } }, "sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg=="],
+
+    "memoize-one": ["memoize-one@6.0.0", "", {}, "sha512-rkpe71W0N0c0Xz6QD0eJETuWAJGnJ9afsl1srmwPrI+yBCkge5EycXXbYRyvL29zZVUWQCY7InPRCv3GDXuZNw=="],
 
     "micromark": ["micromark@4.0.2", "", { "dependencies": { "@types/debug": "^4.0.0", "debug": "^4.0.0", "decode-named-character-reference": "^1.0.0", "devlop": "^1.0.0", "micromark-core-commonmark": "^2.0.0", "micromark-factory-space": "^2.0.0", "micromark-util-character": "^2.0.0", "micromark-util-chunked": "^2.0.0", "micromark-util-combine-extensions": "^2.0.0", "micromark-util-decode-numeric-character-reference": "^2.0.0", "micromark-util-encode": "^2.0.0", "micromark-util-normalize-identifier": "^2.0.0", "micromark-util-resolve-all": "^2.0.0", "micromark-util-sanitize-uri": "^2.0.0", "micromark-util-subtokenize": "^2.0.0", "micromark-util-symbol": "^2.0.0", "micromark-util-types": "^2.0.0" } }, "sha512-zpe98Q6kvavpCr1NPVSCMebCKfD7CA2NqZ+rykeNhONIJBpc1tFKt9hucLGwha3jNTNI8lHpctWJWoimVF4PfA=="],
 

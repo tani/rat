@@ -1,5 +1,6 @@
 import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import * as arktype from "arktype";
+import memoizeOne from "memoize-one";
 import unicodeit from "unicodeit";
 import type { Code, InlineCode, Root } from "mdast";
 import type { Plugin } from "unified";
@@ -9,12 +10,7 @@ export interface RemarkUnicodeMathOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
-let libtexprintfRendererPromise: ReturnType<typeof getLibtexprintfRenderer> | undefined;
-
-function getCachedLibtexprintfRenderer(): ReturnType<typeof getLibtexprintfRenderer> {
-  libtexprintfRendererPromise ??= getLibtexprintfRenderer();
-  return libtexprintfRendererPromise;
-}
+const getCachedLibtexprintfRenderer = memoizeOne(getLibtexprintfRenderer);
 
 const ParentWithChildrenSchema = arktype.type({
   children: "unknown[]",
