@@ -1,5 +1,7 @@
 # rat
 
+`rat` stands for **Render All Text** (at least, that is one way to read it).
+
 Render Markdown or LaTeX into terminal-friendly Unicode text.
 
 `rat` is a small CLI for readable plain-text previews, plus a Vim/Neovim plugin with live JSON-RPC rendering.
