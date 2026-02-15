@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 async function runStdioRender(input: string): Promise<{ out: string; err: string; code: number }> {
   const proc = Bun.spawn(["bun", "packages/cli/index.ts"], {
@@ -115,7 +118,7 @@ function parseJsonRpcResult(line: string): {
   };
 }
 
-describe("@rat/cli markdown", () => {
+describe("@rat/cli markdown stdin/json-rpc", () => {
   test("reads from stdin and writes rendered markdown to stdout", async () => {
     const { out, err, code } = await runStdioRender("# Title\n\n*abc*\n");
 
@@ -155,6 +158,30 @@ describe("@rat/cli markdown", () => {
   });
 });
 
+describe("@rat/cli markdown file", () => {
+  test("supports markdown file argument", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rat-cli-md-"));
+    const file = join(dir, "EXAMPLE_TEXT.md");
+    try {
+      writeFileSync(file, "# File Title\n\n*abc*\n");
+      const proc = Bun.spawn(["bun", "packages/cli/index.ts", file], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const out = await new Response(proc.stdout).text();
+      const err = await new Response(proc.stderr).text();
+      const code = await proc.exited;
+
+      expect(code).toBe(0);
+      expect(err).toBe("");
+      expect(out).toContain("File Title\n==========");
+      expect(out).toContain("𝘢𝘣𝘤");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("@rat/cli latex stdin", () => {
   test("supports --language=latex mode from stdin", async () => {
     const { out, err, code } = await runStdioRenderLatex("Term: \\(\\alpha^2 + \\beta\\)\n");
@@ -162,6 +189,27 @@ describe("@rat/cli latex stdin", () => {
     expect(code).toBe(0);
     expect(err).toBe("");
     expect(out).toContain("Term: α² + β");
+  });
+
+  test("supports latex file argument", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rat-cli-tex-"));
+    const file = join(dir, "EXAMPLE_TEXT.md");
+    try {
+      writeFileSync(file, "Term: \\(\\alpha^2 + \\beta\\)\n");
+      const proc = Bun.spawn(["bun", "packages/cli/index.ts", "--language=latex", file], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const out = await new Response(proc.stdout).text();
+      const err = await new Response(proc.stderr).text();
+      const code = await proc.exited;
+
+      expect(code).toBe(0);
+      expect(err).toBe("");
+      expect(out).toContain("Term: α² + β");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

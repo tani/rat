@@ -10,10 +10,22 @@ Render Markdown from stdin:
 echo "# Hello\n\n*world*" | ./rat
 ```
 
+Render Markdown from a file:
+
+```bash
+./rat examples/EXAMPLE.md
+```
+
 Render LaTeX from stdin:
 
 ```bash
 echo 'Term: \(\alpha^2 + \beta\)' | rat --language=latex
+```
+
+Render LaTeX from a file:
+
+```bash
+./rat --language=latex examples/EXAMPLE.tex
 ```
 
 Run JSON-RPC mode (used by the Vim plugin):
@@ -50,7 +62,7 @@ Example request:
 Example response:
 
 ```json
-{"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β"}}
+{"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β","sourcemap":{"version":2,"segments":[{"nodeType":"inlineMath","output":{"start":{"line":1,"column":4},"end":{"line":1,"column":8}},"input":{"start":{"line":1,"column":4},"end":{"line":1,"column":17}}}]},"previewLine":1}}
 ```
 
 ## Download

@@ -6,6 +6,25 @@ async function readStdin(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();
 }
 
+function resolveInputFile(argv: string[]): string | null {
+  for (let i = 2; i < argv.length; i += 1) {
+    const arg = argv[i] ?? "";
+    if (arg === "--language") {
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--")) continue;
+    return arg;
+  }
+  return null;
+}
+
+async function readCliInput(argv: string[]): Promise<string> {
+  const inputFile = resolveInputFile(argv);
+  if (!inputFile) return await readStdin();
+  return await Bun.file(inputFile).text();
+}
+
 type JsonRpcId = string | number | null;
 
 type JsonRpcRequest = {
@@ -242,7 +261,7 @@ async function main(): Promise<void> {
     await runJsonRpcMode();
     return;
   }
-  const input = await readStdin();
+  const input = await readCliInput(process.argv);
   const language = resolveCliLanguage(process.argv);
   if (language === "latex") {
     const rendered = await renderLatex(input);
