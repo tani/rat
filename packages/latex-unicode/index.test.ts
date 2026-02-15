@@ -27,6 +27,20 @@ describe("latex-unicode inline", () => {
     expect(out.text).toContain("Code: 𝙰𝚋𝚌𝟷𝟸𝟹 and 𝚇𝚢𝟿.");
   });
 
+  test("renders bussproofs prooftree blocks", async () => {
+    const input = String.raw`\begin{prooftree}
+\AxiomC{$A$}
+\AxiomC{$A \to B$}
+\RightLabel{$\to E$}
+\BinaryInfC{$B$}
+\end{prooftree}`;
+    const out = await renderLatex(input);
+    expect(out.text).toContain("A → B");
+    expect(out.text).toContain("→ E");
+    expect(out.text).toContain("─");
+    expect(out.text).not.toContain("AxiomC");
+  });
+
   test("skips latex comments during rendering", async () => {
     const out = await renderLatex("A % comment here\nB \\% kept\nC");
     expect(out.text).toContain("A \nB \\% kept\nC");

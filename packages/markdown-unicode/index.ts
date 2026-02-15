@@ -6,6 +6,7 @@ import remarkMath from "remark-math";
 import remarkStringify from "remark-stringify";
 import remarkSourcemap, { type RemarkSourcemapData } from "@rat/remark-sourcemap";
 import remarkUnicodeInline from "@rat/remark-unicode-inline";
+import remarkUnicodeBussproofs from "@rat/remark-unicode-bussproofs";
 import remarkUnicodeMath from "@rat/remark-unicode-math";
 import remarkUnicodeMermaid from "@rat/remark-unicode-mermaid";
 import remarkUnicodeTable from "@rat/remark-unicode-table";
@@ -55,6 +56,7 @@ export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMath)
+    .use(remarkUnicodeBussproofs)
     .use(remarkUnicodeMath)
     .use(remarkUnicodeMermaid)
     .use(remarkUnicodeInline)

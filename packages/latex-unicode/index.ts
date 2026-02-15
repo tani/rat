@@ -1,4 +1,5 @@
 import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
+import { renderBussproofs } from "@rat/bussproofs-unicode";
 import unicodeit from "unicodeit";
 import { type InlineStyle, stylizeMath } from "./style";
 import {
@@ -271,7 +272,7 @@ export async function renderLatex(
   input: string,
   options: RenderLatexOptions = {},
 ): Promise<RenderedLatex> {
-  const normalizedInput = stripLatexComments(input);
+  const normalizedInput = renderBussproofs(stripLatexComments(input));
   const segments = splitSegments(normalizedInput);
   const renderedSegments: string[] = [];
   for (const segment of segments) {

@@ -48,4 +48,38 @@ describe("@rat/markdown-unicode renderMarkdown", () => {
 
     expect(out.markdown).toContain("𝙰𝚋𝚌𝟷𝟸𝟹 +-*/");
   });
+
+  test("renders bussproofs code blocks before math conversion", async () => {
+    const input = String.raw`~~~bussproofs
+\AxiomC{$A$}
+\AxiomC{$A \to B$}
+\RightLabel{$\to E$}
+\BinaryInfC{$B$}
+~~~
+`;
+    const out = await renderMarkdown(input);
+
+    expect(out.markdown).toContain("→");
+    expect(out.markdown).toContain("─");
+    expect(out.markdown).not.toContain("AxiomC");
+  });
+
+  test("renders bussproofs inside display math blocks", async () => {
+    const input = String.raw`$$
+\begin{prooftree}
+\AxiomC{$A$}
+\AxiomC{$A \to B$}
+\RightLabel{$\to E$}
+\BinaryInfC{$B$}
+\end{prooftree}
+$$
+`;
+    const out = await renderMarkdown(input);
+
+    expect(out.markdown).toContain("→");
+    expect(out.markdown).toContain("→ 𝙴");
+    expect(out.markdown).toContain("─");
+    expect(out.markdown).not.toContain("\\begin{prooftree}");
+    expect(out.markdown).not.toContain("$$");
+  });
 });

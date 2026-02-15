@@ -1,5 +1,5 @@
 {
-  "name": "@rat/latex-unicode",
+  "name": "@rat/remark-unicode-bussproofs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "@rat/bussproofs-unicode": "workspace:*",
-    "@rat/bun-libtexprintf": "workspace:*",
-    "unicodeit": "^0.7.5"
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0"
   }
 }

@@ -18,14 +18,25 @@ interface RenderBlock {
 const START = "\\begin{prooftree}";
 const END = "\\end{prooftree}";
 
-type ArityCommand = "AxiomC" | "UnaryInfC" | "BinaryInfC" | "TrinaryInfC" | "QuaternaryInfC";
-type ProofCommand = ArityCommand | "LeftLabel" | "RightLabel";
+type ArityCommand =
+  | "AxiomC"
+  | "UnaryInfC"
+  | "BinaryInfC"
+  | "TrinaryInfC"
+  | "QuaternaryInfC"
+  | "AXC"
+  | "UIC"
+  | "BIC"
+  | "TIC"
+  | "QIC";
+type LabelCommand = "LeftLabel" | "RightLabel" | "LL" | "RL";
+type ProofCommand = ArityCommand | LabelCommand;
 
 const ProofCommandSchema = arktype.type(
-  "'AxiomC' | 'UnaryInfC' | 'BinaryInfC' | 'TrinaryInfC' | 'QuaternaryInfC' | 'LeftLabel' | 'RightLabel'",
+  "'AxiomC' | 'UnaryInfC' | 'BinaryInfC' | 'TrinaryInfC' | 'QuaternaryInfC' | 'AXC' | 'UIC' | 'BIC' | 'TIC' | 'QIC' | 'LeftLabel' | 'RightLabel' | 'LL' | 'RL'",
 );
 const ArityCommandSchema = arktype.type(
-  "'AxiomC' | 'UnaryInfC' | 'BinaryInfC' | 'TrinaryInfC' | 'QuaternaryInfC'",
+  "'AxiomC' | 'UnaryInfC' | 'BinaryInfC' | 'TrinaryInfC' | 'QuaternaryInfC' | 'AXC' | 'UIC' | 'BIC' | 'TIC' | 'QIC'",
 );
 
 function parseBraced(
@@ -177,10 +188,10 @@ function renderNaturalDeduction(node: ProofNode): string {
 }
 
 function commandArity(cmd: ArityCommand): number {
-  if (cmd === "AxiomC") return 0;
-  if (cmd === "UnaryInfC") return 1;
-  if (cmd === "BinaryInfC") return 2;
-  if (cmd === "TrinaryInfC") return 3;
+  if (cmd === "AxiomC" || cmd === "AXC") return 0;
+  if (cmd === "UnaryInfC" || cmd === "UIC") return 1;
+  if (cmd === "BinaryInfC" || cmd === "BIC") return 2;
+  if (cmd === "TrinaryInfC" || cmd === "TIC") return 3;
   return 4;
 }
 
@@ -197,7 +208,7 @@ function parseProoftreeBody(source: string): ProofNode | null {
     }
 
     const cmdMatch =
-      /^(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|LeftLabel|RightLabel)/.exec(
+      /^(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|AXC|UIC|BIC|TIC|QIC|LeftLabel|RightLabel|LL|RL)/.exec(
         source.slice(i + 1),
       );
     if (!cmdMatch) {
@@ -218,12 +229,12 @@ function parseProoftreeBody(source: string): ProofNode | null {
       continue;
     }
 
-    if (cmd === "LeftLabel") {
+    if (cmd === "LeftLabel" || cmd === "LL") {
       pendingLeftLabel = cleanLabel(parsed.content);
       i = parsed.end;
       continue;
     }
-    if (cmd === "RightLabel") {
+    if (cmd === "RightLabel" || cmd === "RL") {
       pendingRightLabel = cleanLabel(parsed.content);
       i = parsed.end;
       continue;

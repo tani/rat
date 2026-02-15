@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@rat/remark-sourcemap": "workspace:*",
+    "@rat/remark-unicode-bussproofs": "workspace:*",
     "@rat/remark-unicode-inline": "workspace:*",
     "@rat/remark-unicode-math": "workspace:*",
     "@rat/remark-unicode-mermaid": "workspace:*",

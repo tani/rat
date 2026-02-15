@@ -48,6 +48,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@rat/bun-libtexprintf": "workspace:*",
+        "@rat/bussproofs-unicode": "workspace:*",
         "unicodeit": "^0.7.5",
       },
     },
@@ -56,6 +57,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@rat/remark-sourcemap": "workspace:*",
+        "@rat/remark-unicode-bussproofs": "workspace:*",
         "@rat/remark-unicode-codeblock": "workspace:*",
         "@rat/remark-unicode-inline": "workspace:*",
         "@rat/remark-unicode-math": "workspace:*",
@@ -80,6 +82,18 @@
         "unified": "^11.0.5",
         "unist-util-visit": "^5.1.0",
         "vfile": "^6.0.3",
+      },
+    },
+    "packages/remark-unicode-bussproofs": {
+      "name": "@rat/remark-unicode-bussproofs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@rat/bussproofs-unicode": "workspace:*",
+        "remark-math": "^6.0.0",
+        "remark-parse": "^11.0.0",
+        "remark-stringify": "^11.0.0",
+        "unified": "^11.0.5",
+        "unist-util-visit": "^5.1.0",
       },
     },
     "packages/remark-unicode-codeblock": {
@@ -227,6 +241,8 @@
     "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/markdown-unicode"],
 
     "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
+
+    "@rat/remark-unicode-bussproofs": ["@rat/remark-unicode-bussproofs@workspace:packages/remark-unicode-bussproofs"],
 
     "@rat/remark-unicode-codeblock": ["@rat/remark-unicode-codeblock@workspace:packages/remark-unicode-codeblock"],
 

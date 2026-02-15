@@ -128,4 +128,43 @@ describe("bussproofs-unicode", () => {
     expect(ruleLines[0]).toContain("r");
     expect(ruleLines[1]).not.toContain("r");
   });
+
+  test("supports abbreviated commands: AXC, UIC, BIC, TIC, QIC, LL, RL", () => {
+    const unary = String.raw`\begin{prooftree}
+\AXC{$A$}
+\RL{$r$}
+\UIC{$B$}
+\end{prooftree}`;
+    const binary = String.raw`\begin{prooftree}
+\AXC{$P$}
+\AXC{$Q$}
+\LL{$\land I$}
+\BIC{$P \land Q$}
+\end{prooftree}`;
+    const trinary = String.raw`\begin{prooftree}
+\AXC{$P$}
+\AXC{$Q$}
+\AXC{$R$}
+\TIC{$P \land Q \land R$}
+\end{prooftree}`;
+    const quaternary = String.raw`\begin{prooftree}
+\AXC{$P$}
+\AXC{$Q$}
+\AXC{$R$}
+\AXC{$S$}
+\QIC{$P \land Q \land R \land S$}
+\end{prooftree}`;
+
+    const outUnary = renderBussproofs(unary);
+    const outBinary = renderBussproofs(binary);
+    const outTrinary = renderBussproofs(trinary);
+    const outQuaternary = renderBussproofs(quaternary);
+
+    expect(outUnary).toContain("B");
+    expect(outUnary).toContain("r");
+    expect(outBinary).toContain("∧ I");
+    expect(outBinary).toContain("P ∧ Q");
+    expect(outTrinary).toContain("P ∧ Q ∧ R");
+    expect(outQuaternary).toContain("P ∧ Q ∧ R ∧ S");
+  });
 });
