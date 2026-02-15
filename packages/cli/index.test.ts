@@ -33,7 +33,7 @@ async function runJsonRpcRender(): Promise<{
     jsonrpc: string;
     id: number;
     result: {
-      markdown: string;
+      text: string;
       sourcemap: {
         version: number;
         segments: unknown[];
@@ -61,7 +61,7 @@ async function runJsonRpcRenderWithRequest(request: unknown): Promise<{
     jsonrpc: string;
     id: number;
     result: {
-      markdown: string;
+      text: string;
       sourcemap: {
         version: number;
         segments: unknown[];
@@ -93,7 +93,7 @@ function parseJsonRpcResult(line: string): {
   jsonrpc: string;
   id: number;
   result: {
-    markdown: string;
+    text: string;
     sourcemap: {
       version: number;
       segments: unknown[];
@@ -105,7 +105,7 @@ function parseJsonRpcResult(line: string): {
     jsonrpc: string;
     id: number;
     result: {
-      markdown: string;
+      text: string;
       sourcemap: {
         version: number;
         segments: unknown[];
@@ -132,8 +132,8 @@ describe("@rat/cli markdown", () => {
     expect(err).toBe("");
     expect(parsed.jsonrpc).toBe("2.0");
     expect(parsed.id).toBe(1);
-    expect(parsed.result.markdown).toContain("Title\n=====");
-    expect(parsed.result.markdown).toContain("𝘢𝘣𝘤");
+    expect(parsed.result.text).toContain("Title\n=====");
+    expect(parsed.result.text).toContain("𝘢𝘣𝘤");
     expect(parsed.result.sourcemap.version).toBe(2);
     expect(Array.isArray(parsed.result.sourcemap.segments)).toBe(true);
     expect(typeof parsed.result.previewLine).toBe("number");
@@ -155,7 +155,7 @@ describe("@rat/cli markdown", () => {
   });
 });
 
-describe("@rat/cli latex", () => {
+describe("@rat/cli latex stdin", () => {
   test("supports --language=latex mode from stdin", async () => {
     const { out, err, code } = await runStdioRenderLatex("Term: \\(\\alpha^2 + \\beta\\)\n");
 
@@ -163,7 +163,9 @@ describe("@rat/cli latex", () => {
     expect(err).toBe("");
     expect(out).toContain("Term: α² + β");
   });
+});
 
+describe("@rat/cli latex json-rpc", () => {
   test("supports json-rpc render requests with language=latex", async () => {
     const request = {
       jsonrpc: "2.0",
@@ -172,6 +174,7 @@ describe("@rat/cli latex", () => {
       params: {
         text: "A: $\\alpha+\\beta$",
         language: "latex",
+        cursor: { line: 1, column: 1 },
       },
     };
     const proc = Bun.spawn(["bun", "packages/cli/index.ts", "--json-rpc"], {
@@ -188,7 +191,11 @@ describe("@rat/cli latex", () => {
     const parsed = JSON.parse(firstLine) as {
       jsonrpc: string;
       id: number;
-      result: { text: string };
+      result: {
+        text: string;
+        sourcemap: { version: number; segments: unknown[] };
+        previewLine: number | null;
+      };
     };
 
     expect(code).toBe(0);
@@ -196,5 +203,8 @@ describe("@rat/cli latex", () => {
     expect(parsed.jsonrpc).toBe("2.0");
     expect(parsed.id).toBe(2);
     expect(parsed.result.text).toContain("A: α+β");
+    expect(parsed.result.sourcemap.version).toBe(2);
+    expect(Array.isArray(parsed.result.sourcemap.segments)).toBe(true);
+    expect(typeof parsed.result.previewLine).toBe("number");
   });
 });

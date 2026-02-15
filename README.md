@@ -36,8 +36,10 @@ If omitted, default is `markdown`.
 
 `render` accepts `params.language`:
 
-- `"markdown"` (default): returns `{ markdown, sourcemap, previewLine }`
-- `"latex"`: returns `{ text }`
+- `"markdown"` (default): returns `{ text, sourcemap, previewLine }`
+- `"latex"`: returns `{ text, sourcemap, previewLine }`
+
+This is a breaking change: `markdown` is no longer returned in JSON-RPC responses.
 
 Example request:
 

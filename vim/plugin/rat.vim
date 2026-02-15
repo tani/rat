@@ -94,7 +94,7 @@ function! s:handle_message(src_bufnr, msg) abort
   endif
 
   let l:state = s:states[l:key]
-  let l:markdown = get(l:parsed.result, 'markdown', '')
+  let l:markdown = get(l:parsed.result, 'text', '')
   let l:state.last_sourcemap = get(l:parsed.result, 'sourcemap', {'version': 2, 'segments': []})
   call s:replace_preview_buffer(l:state.preview_bufnr, l:markdown)
   let s:states[l:key] = l:state

@@ -31,7 +31,15 @@
         "@rat/markdown-unicode": "workspace:*",
       },
     },
-    "packages/core": {
+    "packages/latex-unicode": {
+      "name": "@rat/latex-unicode",
+      "version": "0.0.0",
+      "dependencies": {
+        "@rat/bun-libtexprintf": "workspace:*",
+        "unicodeit": "^0.7.5",
+      },
+    },
+    "packages/markdown-unicode": {
       "name": "@rat/markdown-unicode",
       "version": "0.0.0",
       "dependencies": {
@@ -45,14 +53,6 @@
         "remark-parse": "^11.0.0",
         "remark-stringify": "^11.0.0",
         "unified": "^11.0.5",
-      },
-    },
-    "packages/latex-unicode": {
-      "name": "@rat/latex-unicode",
-      "version": "0.0.0",
-      "dependencies": {
-        "@rat/bun-libtexprintf": "workspace:*",
-        "unicodeit": "^0.7.5",
       },
     },
     "packages/remark-sourcemap": {
@@ -202,7 +202,7 @@
 
     "@rat/latex-unicode": ["@rat/latex-unicode@workspace:packages/latex-unicode"],
 
-    "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/core"],
+    "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/markdown-unicode"],
 
     "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
 

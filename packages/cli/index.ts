@@ -120,8 +120,15 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
     return;
   }
   if (params.language === "latex") {
-    const text = await renderLatex(params.text);
-    writeJsonRpcResult(id, { text });
+    const rendered = await renderLatex(params.text);
+    const previewLine = params.cursor
+      ? resolvePreviewLine(rendered.sourcemap as SourcemapData, params.cursor.line)
+      : null;
+    writeJsonRpcResult(id, {
+      text: rendered.text,
+      sourcemap: rendered.sourcemap,
+      previewLine,
+    });
     return;
   }
   const rendered = await renderMarkdown(params.text);
@@ -129,7 +136,7 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
     ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
     : null;
   writeJsonRpcResult(id, {
-    markdown: rendered.markdown,
+    text: rendered.markdown,
     sourcemap: rendered.sourcemap,
     previewLine,
   });
@@ -142,7 +149,7 @@ async function handleRenderLatexRequest(id: JsonRpcId, paramsValue: unknown): Pr
     return;
   }
   const rendered = await renderLatex(params.text);
-  writeJsonRpcResult(id, { text: rendered });
+  writeJsonRpcResult(id, { text: rendered.text, sourcemap: rendered.sourcemap });
 }
 
 function handleShutdownRequest(id: JsonRpcId): void {
@@ -239,7 +246,7 @@ async function main(): Promise<void> {
   const language = resolveCliLanguage(process.argv);
   if (language === "latex") {
     const rendered = await renderLatex(input);
-    process.stdout.write(rendered);
+    process.stdout.write(rendered.text);
   } else {
     const { markdown } = await renderMarkdown(input);
     process.stdout.write(markdown);
