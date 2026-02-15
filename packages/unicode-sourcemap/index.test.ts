@@ -55,16 +55,19 @@ test("mapLine prefers semantic heading lines over transformed table body", () =>
 
   expect(map.mapLine(1).targetLine).toBe(1);
   expect(map.mapLine(7).targetLine).toBe(10);
-  expect(map.mapLine(11).targetLine).toBe(15);
+  expect(map.mapLine(11).targetLine).toBe(16);
 
   const cursor = map.mapCursor({ line: 7, column: 1 });
   expect(cursor.targetLine).toBe(10);
 });
 
-test("mapLines is monotonic", () => {
+test("mapLine is monotonic", () => {
   const map = createUnicodeSourcemap("a\n\n## H\n", "a\n\nH\n-\n");
-  const lines = map.mapLines();
-  for (let i = 1; i < lines.length; i += 1) {
-    expect((lines[i] ?? 0) >= (lines[i - 1] ?? 0)).toBe(true);
+  const lines = [1, 2, 3, 4];
+  let previous = 0;
+  for (const line of lines) {
+    const target = map.mapLine(line).targetLine;
+    expect(target).toBeGreaterThanOrEqual(previous);
+    previous = target;
   }
 });

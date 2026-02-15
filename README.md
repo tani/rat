@@ -147,11 +147,8 @@ Example response:
 ```ts
 import { createUnicodeSourcemap } from "@rat/unicode-sourcemap";
 
-const mapper = createUnicodeSourcemap(sourceText, renderedText);
-const offset = mapper.mapOffset(42);
-const cursor = mapper.mapCursor({ line: 10, column: 1 });
-const line = mapper.mapLine(10);
-const lines = mapper.mapLines();
+const mapper = createUnicodeSourcemap(source, target);
+const result = mapper.mapCursor({ line: 10, column: 5 });
 ```
 
 ## Development

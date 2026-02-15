@@ -32,7 +32,6 @@ export interface UnicodeSourcemap {
   mapOffset(sourceOffset: number): OffsetMapping;
   mapCursor(cursor: Cursor): OffsetMapping;
   mapLine(sourceLine: number): LineMapping;
-  mapLines(): number[];
 }
 
 interface NormalizedString {
@@ -368,7 +367,8 @@ export function createUnicodeSourcemap(sourceText: string, targetText: string): 
   const sourceLineStarts = buildLineStarts(sourceText);
   const targetLineStarts = buildLineStarts(targetText);
 
-  const lineMappingsCache = new Map<number, LineMapping>();
+  // sparse array to store monotonic mappings
+  const lineMappingsCache: LineMapping[] = [];
 
   const mapOffset = (sourceOffset: number): OffsetMapping => {
     const clampedSourceOffset = clamp(sourceOffset, 0, sourceText.length);
@@ -386,12 +386,9 @@ export function createUnicodeSourcemap(sourceText: string, targetText: string): 
     };
   };
 
-  const mapLine = (sourceLine: number): LineMapping => {
+  const computeLineMapping = (sourceLine: number): LineMapping => {
     const sourceLineCount = sourceLineStarts.length;
     const clampedSourceLine = clamp(sourceLine, 1, sourceLineCount);
-
-    const cached = lineMappingsCache.get(clampedSourceLine);
-    if (cached) return cached;
 
     const anchorOffset = findLineAnchorOffset(sourceText, sourceLineStarts, clampedSourceLine);
     const anchorMapping = mapOffset(anchorOffset);
@@ -404,15 +401,44 @@ export function createUnicodeSourcemap(sourceText: string, targetText: string): 
       targetLineStarts,
     );
 
-    const mapping: LineMapping = {
+    return {
       sourceLine: clampedSourceLine,
       targetLine: refined.targetLine,
       strategy: refined.strategy,
       confidence: refined.confidence,
     };
+  };
 
-    lineMappingsCache.set(clampedSourceLine, mapping);
-    return mapping;
+  const mapLine = (sourceLine: number): LineMapping => {
+    const sourceLineCount = sourceLineStarts.length;
+    const clampedSourceLine = clamp(sourceLine, 1, sourceLineCount);
+
+    const cached = lineMappingsCache[clampedSourceLine];
+    if (cached) return cached;
+
+    // Find the nearest preceding cached line
+    let startLine = clampedSourceLine - 1;
+    while (startLine > 0 && !lineMappingsCache[startLine]) {
+      startLine -= 1;
+    }
+
+    const startMapping = startLine > 0 ? lineMappingsCache[startLine] : undefined;
+    let previousTarget = startMapping ? startMapping.targetLine : 1;
+
+    for (let line = startLine + 1; line <= clampedSourceLine; line += 1) {
+      const rawMapping = computeLineMapping(line);
+      const monotonicTarget = Math.max(previousTarget, rawMapping.targetLine);
+
+      const mapping: LineMapping = {
+        ...rawMapping,
+        targetLine: monotonicTarget,
+      };
+
+      lineMappingsCache[line] = mapping;
+      previousTarget = monotonicTarget;
+    }
+
+    return lineMappingsCache[clampedSourceLine] ?? computeLineMapping(clampedSourceLine);
   };
 
   const mapCursor = (cursor: Cursor): OffsetMapping => {
@@ -435,25 +461,9 @@ export function createUnicodeSourcemap(sourceText: string, targetText: string): 
     };
   };
 
-  const mapLines = (): number[] => {
-    const sourceLineCount = sourceLineStarts.length;
-    const result: number[] = Array<number>(sourceLineCount).fill(1);
-
-    let previous = 1;
-    for (let line = 1; line <= sourceLineCount; line += 1) {
-      const mapping = mapLine(line);
-      const monotonicTarget = Math.max(previous, mapping.targetLine);
-      result[line - 1] = monotonicTarget;
-      previous = monotonicTarget;
-    }
-
-    return result;
-  };
-
   return {
     mapOffset,
     mapCursor,
     mapLine,
-    mapLines,
   };
 }
