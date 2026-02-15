@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { renderMarkdown } from "@rat/core";
+import { renderMarkdown } from "@rat/markdown-unicode";
 
 async function readStdin(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();

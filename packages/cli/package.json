@@ -7,6 +7,6 @@
     "rat": "./index.ts"
   },
   "dependencies": {
-    "@rat/core": "workspace:*"
+    "@rat/markdown-unicode": "workspace:*"
   }
 }

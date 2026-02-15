@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rat/core": "workspace:*"
+    "@rat/markdown-unicode": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

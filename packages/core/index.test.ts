@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderMarkdown } from "./index";
 
-describe("@rat/core renderMarkdown", () => {
+describe("@rat/markdown-unicode renderMarkdown", () => {
   test("renders markdown via integrated pipeline", async () => {
     const input = `# Title\n\n*abc* and **abc123** and [alt_text](https://example.com/x)\n\n| A | B |\n| - | -: |\n| x | 1 |\n\n$$\n\\frac{1}{2}\n$$\n`;
 
