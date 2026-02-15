@@ -9,6 +9,13 @@ export interface RemarkUnicodeMathOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
+let libtexprintfRendererPromise: ReturnType<typeof getLibtexprintfRenderer> | undefined;
+
+function getCachedLibtexprintfRenderer(): ReturnType<typeof getLibtexprintfRenderer> {
+  libtexprintfRendererPromise ??= getLibtexprintfRenderer();
+  return libtexprintfRendererPromise;
+}
+
 const ParentWithChildrenSchema = arktype.type({
   children: "unknown[]",
 });
@@ -36,7 +43,7 @@ async function displayToUnicode(
   try {
     const output = displayRenderer
       ? await displayRenderer(value)
-      : (await getLibtexprintfRenderer())(value);
+      : (await getCachedLibtexprintfRenderer())(value);
     if (isLikelyFailedLibtexprintf(value, output)) {
       return unicodeit.replace(value);
     }

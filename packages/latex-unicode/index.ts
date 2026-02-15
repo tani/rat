@@ -23,6 +23,13 @@ export interface RenderLatexOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
+let libtexprintfRendererPromise: ReturnType<typeof getLibtexprintfRenderer> | undefined;
+
+function getCachedLibtexprintfRenderer(): ReturnType<typeof getLibtexprintfRenderer> {
+  libtexprintfRendererPromise ??= getLibtexprintfRenderer();
+  return libtexprintfRendererPromise;
+}
+
 const INLINE_COMMANDS: readonly { cmd: string; style: InlineStyle }[] = [
   { cmd: "\\textbf", style: "bold" },
   { cmd: "\\textit", style: "italic" },
@@ -236,7 +243,7 @@ async function displayToUnicode(
 ): Promise<string> {
   const input = value.replaceAll("\r\n", "\n").trim();
   const render = async (latex: string): Promise<string> =>
-    displayRenderer ? await displayRenderer(latex) : (await getLibtexprintfRenderer())(latex);
+    displayRenderer ? await displayRenderer(latex) : (await getCachedLibtexprintfRenderer())(latex);
 
   try {
     const output = await render(input);
