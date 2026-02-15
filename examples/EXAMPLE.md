@@ -80,7 +80,7 @@ $$
 $$
 
 $$
-\sum_{k=1}^{n} k = \frac{n(n+1)}{2} + 12 = 3
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
 $$
 
 ## Mermaid
