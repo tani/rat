@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@rat/latex-unicode": "workspace:*",
-    "@rat/markdown-unicode": "workspace:*"
+    "@rat/markdown-unicode": "workspace:*",
+    "arktype": "^2.1.29"
   }
 }

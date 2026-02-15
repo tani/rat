@@ -22,6 +22,7 @@
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",
     "eslint": "^9.20.1",
+    "eslint-plugin-no-type-assertion": "^1.3.0",
     "oxfmt": "^0.32.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.24.1"

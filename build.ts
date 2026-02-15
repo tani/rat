@@ -29,17 +29,21 @@ async function buildTarget(target: BuildTarget): Promise<void> {
   await mkdir(dirname(target.outfile), { recursive: true });
   process.stdout.write(`[compile] ${target.target} -> ${target.outfile}\n`);
 
-  const result = await Bun.build({
-    entrypoints: [ENTRYPOINT],
-    outfile: target.outfile,
-    target: target.target,
-    compile: true,
-  } as unknown as Bun.BuildConfig);
-
-  if (!result.success) {
-    for (const log of result.logs) {
-      process.stderr.write(`${log.name}: ${log.message}\n`);
-    }
+  const proc = Bun.spawn(
+    [
+      "bun",
+      "build",
+      ENTRYPOINT,
+      "--compile",
+      "--target",
+      target.target,
+      "--outfile",
+      target.outfile,
+    ],
+    { stdout: "inherit", stderr: "inherit" },
+  );
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
     throw new Error(`build failed for ${target.target}`);
   }
 }

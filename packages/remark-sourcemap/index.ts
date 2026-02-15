@@ -1,3 +1,4 @@
+import * as arktype from "arktype";
 import { toString } from "mdast-util-to-string";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
@@ -51,18 +52,31 @@ const TRACKED_TYPES = new Set([
   "math",
 ]);
 
+const GenericNodeSchema = arktype.type({ type: "string" });
+const NodeWithChildrenSchema = arktype.type({ children: "unknown[]" });
+
 function normalizeText(value: string): string {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 function signatureOf(node: Node): string {
-  return `${node.type}:${normalizeText(toString(node as never))}`;
+  return `${node.type}:${normalizeText(toString(node))}`;
 }
 
 function shouldTrackNode(node: Node): boolean {
   if (node.type === "root") return true;
   if (!node.position) return false;
   return TRACKED_TYPES.has(node.type);
+}
+
+function isNode(value: unknown): value is Node {
+  return !(GenericNodeSchema(value) instanceof arktype.type.errors);
+}
+
+function getChildren(node: Node): Node[] {
+  const nodeWithChildren = NodeWithChildrenSchema(node);
+  if (nodeWithChildren instanceof arktype.type.errors) return [];
+  return nodeWithChildren.children.filter((child): child is Node => isNode(child));
 }
 
 function collectNodeRecords(root: Node): NodeRecord[] {
@@ -76,9 +90,8 @@ function collectNodeRecords(root: Node): NodeRecord[] {
       });
     }
 
-    const parent = node as Node & { children?: Node[] };
-    const children = parent.children;
-    if (!children || children.length === 0) return;
+    const children = getChildren(node);
+    if (children.length === 0) return;
 
     let sawMissingPosition = false;
     for (const child of children) {
@@ -174,7 +187,7 @@ function emitLineMap(currentTree: Root, generatedTree: Root, file: VFile): void 
     });
   }
 
-  (file.data as { sourcemap?: RemarkSourcemapData }).sourcemap = {
+  file.data.sourcemap = {
     version: 2,
     segments,
   };

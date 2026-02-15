@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import * as arktype from "arktype";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
@@ -6,10 +7,31 @@ import { VFile } from "vfile";
 import type { Root } from "mdast";
 import remarkSourcemap, { type RemarkSourcemapData } from "./index";
 
+const SourcemapDataSchema = arktype.type({
+  version: "2",
+  segments: "unknown[]",
+});
+
 function readSourcemap(file: VFile): RemarkSourcemapData {
-  const data = (file.data as { sourcemap?: RemarkSourcemapData }).sourcemap;
-  if (!data) throw new Error("missing sourcemap");
-  return data;
+  const data = SourcemapDataSchema(file.data.sourcemap);
+  if (data instanceof arktype.type.errors) throw new Error("missing sourcemap");
+  const segmentSchema = arktype.type({
+    nodeType: "string",
+    output: {
+      start: { line: "number", column: "number", "offset?": "number" },
+      end: { line: "number", column: "number", "offset?": "number" },
+    },
+    input: {
+      start: { line: "number", column: "number", "offset?": "number" },
+      end: { line: "number", column: "number", "offset?": "number" },
+    },
+  });
+  const segments = data.segments.flatMap((segment) => {
+    const validated = segmentSchema(segment);
+    if (validated instanceof arktype.type.errors) return [];
+    return [validated];
+  });
+  return { version: 2, segments };
 }
 
 function hasLineMapping(map: RemarkSourcemapData, outputLine: number, inputLine: number): boolean {

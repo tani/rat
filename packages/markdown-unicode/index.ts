@@ -1,3 +1,4 @@
+import * as arktype from "arktype";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -12,6 +13,40 @@ import remarkUnicodeTable from "@rat/remark-unicode-table";
 export interface RenderedMarkdown {
   markdown: string;
   sourcemap: RemarkSourcemapData;
+}
+
+const SourcemapSegmentSchema = arktype.type({
+  nodeType: "string",
+  output: {
+    start: { line: "number", column: "number", "offset?": "number" },
+    end: { line: "number", column: "number", "offset?": "number" },
+  },
+  input: {
+    start: { line: "number", column: "number", "offset?": "number" },
+    end: { line: "number", column: "number", "offset?": "number" },
+  },
+});
+
+const SourcemapDataSchema = arktype.type({
+  sourcemap: {
+    version: "2",
+    segments: "unknown[]",
+  },
+});
+
+function readSourcemapFromFileData(data: unknown): RemarkSourcemapData | undefined {
+  const sourcemapValue = SourcemapDataSchema(data);
+  if (sourcemapValue instanceof arktype.type.errors) return undefined;
+  const sourcemap = sourcemapValue.sourcemap;
+  const segments = sourcemap.segments.flatMap((segment) => {
+    const validated = SourcemapSegmentSchema(segment);
+    if (validated instanceof arktype.type.errors) return [];
+    return [validated];
+  });
+  return {
+    version: 2,
+    segments,
+  };
 }
 
 export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
@@ -33,7 +68,7 @@ export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
     })
     .process(input);
 
-  const sourcemap = (file.data as { sourcemap?: RemarkSourcemapData }).sourcemap ?? {
+  const sourcemap = readSourcemapFromFileData(file.data) ?? {
     version: 2,
     segments: [],
   };

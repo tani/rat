@@ -8,6 +8,7 @@
     ".": "./index.ts"
   },
   "dependencies": {
+    "arktype": "^2.1.29",
     "mdast-util-to-string": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",

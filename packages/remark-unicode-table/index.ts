@@ -1,9 +1,14 @@
+import * as arktype from "arktype";
 import { toString } from "mdast-util-to-string";
 import type { Code, Root, Table, TableCell, TableRow } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
 type Align = "left" | "right" | "center" | null;
+
+const ParentWithChildrenSchema = arktype.type({
+  children: "unknown[]",
+});
 
 function pad(text: string, width: number, align: Align): string {
   const raw = text.trim();
@@ -28,11 +33,10 @@ function renderTable(table: Table): string {
   const colCount = Math.max(...rows.map((row) => row.children.length));
   const align: Align[] = Array.from({ length: colCount }, (_, i) => table.align?.[i] ?? null);
 
+  const emptyCell: TableCell = { type: "tableCell", children: [{ type: "text", value: "" }] };
   const matrix: string[][] = rows.map((row) => {
     const cells = rowCells(row);
-    return Array.from({ length: colCount }, (_, i) =>
-      toString(cells[i] ?? ({ type: "text", value: "" } as never)),
-    );
+    return Array.from({ length: colCount }, (_, i) => toString(cells[i] ?? emptyCell));
   });
 
   const widths = Array.from({ length: colCount }, (_, col) => {
@@ -67,10 +71,12 @@ function renderTable(table: Table): string {
 const remarkUnicodeTable: Plugin<[], Root> = function remarkUnicodeTable() {
   return function transform(tree) {
     visit(tree, "table", (node: Table, index, parent) => {
-      if (index === undefined || !parent || !("children" in parent)) return;
+      if (index === undefined || !parent) return;
+      const parentWithChildren = ParentWithChildrenSchema(parent);
+      if (parentWithChildren instanceof arktype.type.errors) return;
       const rendered = renderTable(node);
       const code: Code = { type: "code", lang: "", value: rendered };
-      (parent.children as Root["children"])[index] = code;
+      parentWithChildren.children[index] = code;
     });
   };
 };

@@ -1,18 +1,6 @@
+import * as arktype from "arktype";
 import { toString } from "mdast-util-to-string";
-import type {
-  Delete,
-  Emphasis,
-  Image,
-  ImageReference,
-  InlineCode,
-  Link,
-  Parent,
-  Root,
-  RootContent,
-  Strong,
-  Table,
-  Text,
-} from "mdast";
+import type { Root, RootContent, Table } from "mdast";
 import type { Node } from "unist";
 import type { Plugin } from "unified";
 
@@ -20,6 +8,13 @@ const COMBINING_STRIKE = "\u0336";
 const COMBINING_UNDERLINE = "\u0332";
 
 type InlineStyle = "plain" | "italic" | "bold" | "boldItalic";
+
+const TextNodeSchema = arktype.type({ type: "'text'", value: "string" });
+const InlineCodeNodeSchema = arktype.type({ type: "'inlineCode'", value: "string" });
+const NodeWithChildrenSchema = arktype.type({ children: "unknown[]" });
+const ImageNodeSchema = arktype.type({ type: "'image'", "alt?": "string" });
+const ImageRefNodeSchema = arktype.type({ type: "'imageReference'", "alt?": "string" });
+const GenericNodeSchema = arktype.type({ type: "string" });
 
 function applyCombining(value: string, combining: string): string {
   let out = "";
@@ -75,13 +70,40 @@ function nextStyle(current: InlineStyle, node: Node): InlineStyle {
   return current;
 }
 
+function asNode(value: unknown): Node | undefined {
+  const parsed = GenericNodeSchema(value);
+  if (parsed instanceof arktype.type.errors) return undefined;
+  return parsed;
+}
+
+function asNodeWithChildren(node: Node): { children: unknown[] } | undefined {
+  const parsed = NodeWithChildrenSchema(node);
+  if (parsed instanceof arktype.type.errors) return undefined;
+  return parsed;
+}
+
+function isRootContentNode(node: Node): node is RootContent {
+  return (
+    node.type === "paragraph" ||
+    node.type === "heading" ||
+    node.type === "blockquote" ||
+    node.type === "list" ||
+    node.type === "table" ||
+    node.type === "html" ||
+    node.type === "code" ||
+    node.type === "thematicBreak"
+  );
+}
+
 function renderInline(node: Node, style: InlineStyle = "plain"): string {
-  if (node.type === "text") {
-    return stylizeMath((node as Text).value, style);
+  const textNode = TextNodeSchema(node);
+  if (!(textNode instanceof arktype.type.errors)) {
+    return stylizeMath(textNode.value, style);
   }
 
-  if (node.type === "inlineCode") {
-    return stylizeMath((node as InlineCode).value, style);
+  const inlineCodeNode = InlineCodeNodeSchema(node);
+  if (!(inlineCodeNode instanceof arktype.type.errors)) {
+    return stylizeMath(inlineCodeNode.value, style);
   }
 
   if (node.type === "break") {
@@ -89,46 +111,63 @@ function renderInline(node: Node, style: InlineStyle = "plain"): string {
   }
 
   if (node.type === "delete") {
-    const value = renderChildren(node as Delete, style);
+    const value = renderChildren(node, style);
     return applyCombining(value, COMBINING_STRIKE);
   }
 
   if (node.type === "link") {
-    const value = renderChildren(node as Link, "plain");
+    const value = renderChildren(node, "plain");
     return applyCombining(value, COMBINING_UNDERLINE);
   }
 
   if (node.type === "emphasis" || node.type === "strong") {
-    return renderChildren(node as Emphasis | Strong, nextStyle(style, node));
+    return renderChildren(node, nextStyle(style, node));
   }
 
-  if ("children" in (node as Parent)) {
-    return renderChildren(node as Parent, style);
+  const container = asNodeWithChildren(node);
+  if (container) {
+    return renderChildren(node, style);
   }
 
-  if (node.type === "image") return stylizeMath((node as Image).alt ?? "", style);
-  if (node.type === "imageReference") return stylizeMath((node as ImageReference).alt ?? "", style);
+  const image = ImageNodeSchema(node);
+  if (!(image instanceof arktype.type.errors)) return stylizeMath(image.alt ?? "", style);
+  const imageRef = ImageRefNodeSchema(node);
+  if (!(imageRef instanceof arktype.type.errors)) return stylizeMath(imageRef.alt ?? "", style);
 
-  return stylizeMath(toString(node as never), style);
+  return stylizeMath(toString(node), style);
 }
 
-function renderChildren(parent: Parent, style: InlineStyle): string {
-  return parent.children.map((child) => renderInline(child as Node, style)).join("");
+function renderChildren(parent: Node, style: InlineStyle): string {
+  const parsed = asNodeWithChildren(parent);
+  if (!parsed) return "";
+  return parsed.children
+    .map((child) => {
+      const childNode = asNode(child);
+      if (!childNode) return "";
+      return renderInline(childNode, style);
+    })
+    .join("");
 }
 
-function textNode(value: string): Text {
+function textNode(value: string): { type: "text"; value: string } {
   return { type: "text", value };
 }
 
-function flattenInlineChildren(parent: Parent): void {
+function flattenInlineChildren(parent: Node): void {
+  const parsed = asNodeWithChildren(parent);
+  if (!parsed) return;
   const rendered = renderChildren(parent, "plain");
-  parent.children = [textNode(rendered)] as Parent["children"];
+  parsed.children = [textNode(rendered)];
 }
 
-function transformContainerChildren<T extends { children: unknown[] }>(node: T): T {
-  node.children = node.children.map(
-    (child) => transformNode(child as RootContent) as (typeof node.children)[number],
-  );
+function transformContainerChildren<T extends RootContent>(node: T): T {
+  const parsed = asNodeWithChildren(node);
+  if (!parsed) return node;
+  parsed.children = parsed.children.map((child) => {
+    const childNode = asNode(child);
+    if (!childNode || !isRootContentNode(childNode)) return child;
+    return transformNode(childNode);
+  });
   return node;
 }
 

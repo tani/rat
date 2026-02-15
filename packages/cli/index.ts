@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import * as arktype from "arktype";
 import { renderLatex } from "@rat/latex-unicode";
 import { renderMarkdown } from "@rat/markdown-unicode";
 
@@ -66,35 +67,42 @@ interface SourcemapData {
   segments: SourcemapSegment[];
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+const CursorSchema = arktype.type({
+  line: "number.integer >= 1",
+  column: "number.integer >= 1",
+});
+
+const RenderParamsSchema = arktype.type({
+  text: "string",
+  "cursor?": CursorSchema,
+  "language?": "'markdown' | 'latex'",
+});
+
+const SourcemapSchema = arktype.type({
+  version: "2",
+  segments: "unknown[]",
+});
+
+const JsonRpcRequestSchema = arktype.type({
+  "jsonrpc?": "string",
+  "id?": "string | number | null",
+  "method?": "string",
+  "params?": "unknown",
+});
 
 function parseCursor(value: unknown): Cursor | undefined {
-  if (!isObject(value)) return undefined;
-  const line = value.line;
-  const column = value.column;
-  if (typeof line !== "number" || !Number.isFinite(line)) return undefined;
-  if (typeof column !== "number" || !Number.isFinite(column)) return undefined;
-  return {
-    line: Math.max(1, Math.trunc(line)),
-    column: Math.max(1, Math.trunc(column)),
-  };
+  const parsed = CursorSchema(value);
+  if (parsed instanceof arktype.type.errors) return undefined;
+  return parsed;
 }
 
 function parseRenderParams(value: unknown): RenderParams | undefined {
-  if (!isObject(value)) return undefined;
-  if (typeof value.text !== "string") return undefined;
-  const languageRaw = value.language;
-  let language: "markdown" | "latex" | undefined;
-  if (languageRaw !== undefined) {
-    if (languageRaw !== "markdown" && languageRaw !== "latex") return undefined;
-    language = languageRaw;
-  }
+  const parsed = RenderParamsSchema(value);
+  if (parsed instanceof arktype.type.errors) return undefined;
   return {
-    text: value.text,
-    cursor: parseCursor(value.cursor),
-    language,
+    text: parsed.text,
+    cursor: parseCursor(parsed.cursor),
+    language: parsed.language,
   };
 }
 
@@ -106,6 +114,10 @@ function resolvePreviewLine(sourcemap: SourcemapData, sourceLine: number): numbe
   });
   if (candidate) return candidate.output.start.line;
   return sourceLine;
+}
+
+function isSourcemapData(value: unknown): value is SourcemapData {
+  return !(SourcemapSchema(value) instanceof arktype.type.errors);
 }
 
 function writeJson(value: unknown): void {
@@ -132,8 +144,7 @@ function writeJsonRpcResult(id: JsonRpcId, result: unknown): void {
 }
 
 function isJsonRpcRequest(value: unknown): value is JsonRpcRequest {
-  if (!isObject(value)) return false;
-  return true;
+  return !(JsonRpcRequestSchema(value) instanceof arktype.type.errors);
 }
 
 async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise<void> {
@@ -144,8 +155,12 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
   }
   if (params.language === "latex") {
     const rendered = await renderLatex(params.text);
+    if (!isSourcemapData(rendered.sourcemap)) {
+      writeJsonRpcError(id ?? null, -32603, "Invalid sourcemap");
+      return;
+    }
     const previewLine = params.cursor
-      ? resolvePreviewLine(rendered.sourcemap as SourcemapData, params.cursor.line)
+      ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
       : null;
     writeJsonRpcResult(id, {
       text: rendered.text,

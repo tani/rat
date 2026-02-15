@@ -1,12 +1,17 @@
 import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
+import * as arktype from "arktype";
 import unicodeit from "unicodeit";
-import type { Code, InlineCode, Parent, Root } from "mdast";
+import type { Code, InlineCode, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
 export interface RemarkUnicodeMathOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
+
+const ParentWithChildrenSchema = arktype.type({
+  children: "unknown[]",
+});
 
 function toInlineCode(value: string): InlineCode {
   return { type: "inlineCode", value };
@@ -49,15 +54,17 @@ const remarkUnicodeMath: Plugin<[RemarkUnicodeMathOptions?], Root> = function re
 
     visit(tree, (node, index, parent) => {
       if (index === undefined || !parent) return;
+      const parentWithChildren = ParentWithChildrenSchema(parent);
+      if (parentWithChildren instanceof arktype.type.errors) return;
       if (node.type === "inlineMath") {
         const inlineValue = unicodeit.replace(node.value);
-        (parent as Parent).children[index] = toInlineCode(inlineValue);
+        parentWithChildren.children[index] = toInlineCode(inlineValue);
         return;
       }
       if (node.type === "math") {
         jobs.push(
           displayToUnicode(node.value, options.displayRenderer).then((displayValue) => {
-            (parent as Parent).children[index] = toCode(displayValue);
+            parentWithChildren.children[index] = toCode(displayValue);
           }),
         );
       }

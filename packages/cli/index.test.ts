@@ -1,7 +1,21 @@
 import { describe, expect, test } from "bun:test";
+import * as arktype from "arktype";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+const JsonRpcRenderResultSchema = arktype.type({
+  jsonrpc: "string",
+  id: "number",
+  result: {
+    text: "string",
+    sourcemap: {
+      version: "number",
+      segments: "unknown[]",
+    },
+    "previewLine?": "number | null",
+  },
+});
 
 async function runStdioRender(input: string): Promise<{ out: string; err: string; code: number }> {
   const proc = Bun.spawn(["bun", "packages/cli/index.ts"], {
@@ -104,17 +118,17 @@ function parseJsonRpcResult(line: string): {
     previewLine: number | null;
   };
 } {
-  return JSON.parse(line) as {
-    jsonrpc: string;
-    id: number;
+  const parsed: unknown = JSON.parse(line);
+  const validated = JsonRpcRenderResultSchema(parsed);
+  if (validated instanceof arktype.type.errors) {
+    throw new Error("Invalid JSON-RPC result payload");
+  }
+  return {
+    ...validated,
     result: {
-      text: string;
-      sourcemap: {
-        version: number;
-        segments: unknown[];
-      };
-      previewLine: number | null;
-    };
+      ...validated.result,
+      previewLine: validated.result.previewLine ?? null,
+    },
   };
 }
 
@@ -236,15 +250,7 @@ describe("@rat/cli latex json-rpc", () => {
     const err = await new Response(proc.stderr).text();
     const code = await proc.exited;
     const firstLine = out.trim().split("\n")[0] ?? "";
-    const parsed = JSON.parse(firstLine) as {
-      jsonrpc: string;
-      id: number;
-      result: {
-        text: string;
-        sourcemap: { version: number; segments: unknown[] };
-        previewLine: number | null;
-      };
-    };
+    const parsed = parseJsonRpcResult(firstLine);
 
     expect(code).toBe(0);
     expect(err).toBe("");

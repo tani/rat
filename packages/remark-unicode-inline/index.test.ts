@@ -45,11 +45,12 @@ test("remark-unicode-inline: output inline content is plain text nodes", () => {
   const tree = processor.parse("This is **bold** and [link](https://a.b)");
   const transformed = processor.runSync(tree);
 
-  const paragraph = transformed.children[0] as {
-    type: string;
-    children: { type: string; value: string }[];
-  };
+  const paragraph = transformed.children[0];
+  if (!paragraph) throw new Error("missing paragraph");
   expect(paragraph.type).toBe("paragraph");
+  if (!("children" in paragraph) || !Array.isArray(paragraph.children)) {
+    throw new Error("paragraph node should have children");
+  }
   expect(paragraph.children).toHaveLength(1);
   const firstChild = paragraph.children[0];
   expect(firstChild).toBeDefined();
