@@ -40,14 +40,14 @@ interface NormalizedString {
   mapToNormalized: number[];
 }
 
-function at(matrix: number[][], row: number, col: number): number {
+function at(matrix: Int32Array[], row: number, col: number): number {
   return matrix[row]?.[col] ?? 0;
 }
 
 function normalize(s: string): NormalizedString {
   let text = "";
   const mapToOriginal: number[] = [];
-  const mapToNormalized: number[] = new Array(s.length).fill(-1);
+  const mapToNormalized: number[] = Array<number>(s.length).fill(-1);
 
   let originalIndex = 0;
   for (const char of s) {
@@ -69,9 +69,7 @@ function normalize(s: string): NormalizedString {
     } else {
       // Appended
       const currentIndex = text.length;
-      for (let k = 0; k < normChar.length; k++) {
-        mapToOriginal.push(originalIndex);
-      }
+      mapToOriginal.push(...Array<number>(normChar.length).fill(originalIndex));
 
       text += normChar;
 
@@ -95,10 +93,7 @@ function coreTextSourcemap(a: string, b: string, apos: number): number {
   const m = a.length;
   const n = b.length;
 
-  const dp: number[][] = Array.from(
-    { length: m + 1 },
-    () => new Int32Array(n + 1) as unknown as number[],
-  );
+  const dp: Int32Array[] = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
 
   for (let i = 0; i <= m; i++) {
     const row = dp[i];
