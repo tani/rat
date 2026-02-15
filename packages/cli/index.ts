@@ -254,6 +254,26 @@ function resolveCliLanguage(argv: string[]): "markdown" | "latex" {
 }
 
 async function main(): Promise<void> {
+  if (process.argv.includes("--help") || process.argv.includes("-h")) {
+    process.stdout.write(
+      [
+        "Usage: rat [options] [file]",
+        "",
+        "Options:",
+        "  --language <lang>  Specify input language (markdown, latex)",
+        "  --json-rpc         Run in JSON-RPC mode for editor integration",
+        "  --help, -h         Show this help message",
+        "",
+        "Examples:",
+        "  rat README.md",
+        "  rat --language latex equation.tex",
+        "  echo '# Hello' | rat",
+        "",
+      ].join("\n"),
+    );
+    process.exit(0);
+  }
+
   if (process.argv.includes("--json-rpc")) {
     await runJsonRpcMode();
     return;
