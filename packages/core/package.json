@@ -1,5 +1,5 @@
 {
-  "name": "@mdd/core",
+  "name": "@rat/core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,11 +8,11 @@
     ".": "./index.ts"
   },
   "dependencies": {
-    "@mdd/remark-sourcemap": "workspace:*",
-    "@mdd/remark-unicode-inline": "workspace:*",
-    "@mdd/remark-unicode-math": "workspace:*",
-    "@mdd/remark-unicode-mermaid": "workspace:*",
-    "@mdd/remark-unicode-table": "workspace:*",
+    "@rat/remark-sourcemap": "workspace:*",
+    "@rat/remark-unicode-inline": "workspace:*",
+    "@rat/remark-unicode-math": "workspace:*",
+    "@rat/remark-unicode-mermaid": "workspace:*",
+    "@rat/remark-unicode-table": "workspace:*",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",

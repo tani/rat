@@ -1,7 +1,7 @@
-if exists('g:loaded_mdd_plugin')
+if exists('g:loaded_rat_plugin')
   finish
 endif
-let g:loaded_mdd_plugin = 1
+let g:loaded_rat_plugin = 1
 
 if &compatible
   set nocompatible
@@ -9,17 +9,17 @@ endif
 
 let s:states = {}
 
-function! s:get_mdd_command() abort
-  let l:path_mdd = exepath('mdd')
-  if !empty(l:path_mdd)
-    return [l:path_mdd, '--json-rpc']
+function! s:get_rat_command() abort
+  let l:path_rat = exepath('rat')
+  if !empty(l:path_rat)
+    return [l:path_rat, '--json-rpc']
   endif
   return []
 endfunction
 
 function! s:echoerr(msg) abort
   echohl ErrorMsg
-  echom '[mdd] ' . a:msg
+  echom '[rat] ' . a:msg
   echohl None
 endfunction
 
@@ -220,9 +220,9 @@ function! s:open() abort
     return
   endif
 
-  let l:cmd = s:get_mdd_command()
+  let l:cmd = s:get_rat_command()
   if len(l:cmd) == 0 || !executable(l:cmd[0])
-    call s:echoerr('missing executable in PATH: mdd')
+    call s:echoerr('missing executable in PATH: rat')
     return
   endif
 
@@ -252,7 +252,7 @@ function! s:open() abort
           \ 'stdout_buffered': v:false,
           \ })
     if l:job <= 0
-      call s:echoerr('failed to start mdd json-rpc process')
+      call s:echoerr('failed to start rat json-rpc process')
       execute l:preview_win . 'wincmd c'
       return
     endif
@@ -263,7 +263,7 @@ function! s:open() abort
           \ 'out_cb': function('s:on_vim_stdout', [l:src_bufnr]),
           \ })
     if job_status(l:job) ==# 'fail'
-      call s:echoerr('failed to start mdd json-rpc process')
+      call s:echoerr('failed to start rat json-rpc process')
       execute l:preview_win . 'wincmd c'
       return
     endif
@@ -287,13 +287,13 @@ function! s:toggle() abort
   endif
 endfunction
 
-augroup mdd_events
+augroup rat_events
   autocmd!
   autocmd TextChanged,TextChangedI * call s:maybe_refresh_for_current_buffer()
   autocmd CursorMoved,CursorMovedI * call s:maybe_cursor_sync_for_current_buffer()
   autocmd BufWipeout * call s:close_preview(str2nr(expand('<abuf>')))
 augroup END
 
-command! MddPreviewOpen call <SID>open()
-command! MddPreviewClose call <SID>close()
-command! MddPreviewToggle call <SID>toggle()
+command! RatPreviewOpen call <SID>open()
+command! RatPreviewClose call <SID>close()
+command! RatPreviewToggle call <SID>toggle()

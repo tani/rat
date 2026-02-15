@@ -1,5 +1,5 @@
 {
-  "name": "@mdd/remark-unicode-table",
+  "name": "@rat/remark-unicode-table",
   "version": "0.0.0",
   "private": true,
   "type": "module",

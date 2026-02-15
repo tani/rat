@@ -14,10 +14,10 @@ build_target() {
   bun build --compile --target="$target" --outfile="$outfile" "$ENTRYPOINT"
 }
 
-build_target "bun-darwin-arm64" "$OUT_DIR/mdd-darwin-arm64"
-build_target "bun-darwin-x64" "$OUT_DIR/mdd-darwin-x64"
-build_target "bun-linux-x64" "$OUT_DIR/mdd-linux-x64"
-build_target "bun-linux-arm64" "$OUT_DIR/mdd-linux-arm64"
-build_target "bun-windows-x64" "$OUT_DIR/mdd-windows-x64.exe"
+build_target "bun-darwin-arm64" "$OUT_DIR/rat-darwin-arm64"
+build_target "bun-darwin-x64" "$OUT_DIR/rat-darwin-x64"
+build_target "bun-linux-x64" "$OUT_DIR/rat-linux-x64"
+build_target "bun-linux-arm64" "$OUT_DIR/rat-linux-arm64"
+build_target "bun-windows-x64" "$OUT_DIR/rat-windows-x64.exe"
 
 echo "[done] binaries written to $OUT_DIR"

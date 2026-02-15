@@ -1,50 +1,12 @@
+import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import unicodeit from "unicodeit";
 import type { Code, InlineCode, Parent, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { createRendererFromExports } from "./libtexprintf/libtexprintf";
-import wasmPath from "./libtexprintf/libtexprintf.wasm";
 
-const wasiSnapshotPreview1 = {
-  proc_exit(code: number): never {
-    throw new Error(`WASM requested proc_exit(${code})`);
-  },
-  fd_close(_fd: number): number {
-    return 0;
-  },
-  fd_write(_fd: number, _iovs: number, _iovsLen: number, _nwritten: number): number {
-    return 0;
-  },
-  fd_seek(
-    _fd: number,
-    _offsetLow: number,
-    _offsetHigh: number,
-    _whence: number,
-    _newOffset: number,
-  ): number {
-    return 0;
-  },
-};
-
-type Renderer = (latex: string) => string;
 export type RemarkUnicodeMathOptions = {
   displayRenderer?: (latex: string) => string | Promise<string>;
 };
-let rendererPromise: Promise<Renderer> | undefined;
-
-function getRenderer(): Promise<Renderer> {
-  if (!rendererPromise) {
-    rendererPromise = (async () => {
-      // const wasmUrl = new URL("./libtexprintf/libtexprintf.wasm", import.meta.url);
-      const bytes = await Bun.file(wasmPath).arrayBuffer();
-      const { instance } = await WebAssembly.instantiate(bytes, {
-        wasi_snapshot_preview1: wasiSnapshotPreview1,
-      });
-      return createRendererFromExports(instance.exports as never);
-    })();
-  }
-  return rendererPromise;
-}
 
 function toInlineCode(value: string): InlineCode {
   return { type: "inlineCode", value };
@@ -67,7 +29,9 @@ async function displayToUnicode(
   displayRenderer?: (latex: string) => string | Promise<string>,
 ): Promise<string> {
   try {
-    const output = displayRenderer ? await displayRenderer(value) : (await getRenderer())(value);
+    const output = displayRenderer
+      ? await displayRenderer(value)
+      : (await getLibtexprintfRenderer())(value);
     if (isLikelyFailedLibtexprintf(value, output)) {
       return unicodeit.replace(value);
     }

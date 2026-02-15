@@ -1,8 +1,8 @@
 # Markdown Rendering Example
 
-https://github.com/tani/mdd
+https://github.com/tani/rat
 
-This document exercises most syntax supported by `mdd`.
+This document exercises most syntax supported by `rat`.
 
 ## Headings
 
@@ -58,7 +58,7 @@ export function add(a: number, b: number): number {
 ```
 
 ```bash
-deno run -A src/mdd.ts EXAMPLE.md
+deno run -A src/rat.ts EXAMPLE.md
 ```
 
 ## Table
