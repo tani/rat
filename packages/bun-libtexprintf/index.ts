@@ -1,16 +1,16 @@
 import { CString, cc } from "bun:ffi";
-import { getStagedBridgeSourceFile } from "./assets.ts";
+import { stageBridgeSourceFile } from "./assets.ts";
 
 export type LibtexprintfRenderer = (latex: string) => string;
 
 const encoder = new TextEncoder();
 
 export async function getLibtexprintfRenderer(): Promise<LibtexprintfRenderer> {
-  const bridgeSourceFile = await getStagedBridgeSourceFile();
+  await using stagedBridgeSource = await stageBridgeSourceFile();
   const {
     symbols: { rat_texfree, rat_texstring },
   } = cc({
-    source: bridgeSourceFile,
+    source: stagedBridgeSource.bridgeSourceFile,
     flags: ["-w"],
     symbols: {
       rat_texstring: {

@@ -1,3 +1,4 @@
+import { rmSync } from "node:fs";
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -24,11 +25,11 @@ import texprintfCSource from "./libtexprintf/src/texprintf.c" with { type: "file
 import unicodeBlocksHSource from "./libtexprintf/src/unicodeblocks.h" with { type: "file" };
 
 interface AssetFile {
-  from: string;
-  to: string;
+  readonly from: string;
+  readonly to: string;
 }
 
-const assetFiles: AssetFile[] = [
+const assetFiles: readonly AssetFile[] = [
   { from: ffiBridgeSource, to: "ffi_bridge.c" },
   { from: boxesCSource, to: "src/boxes.c" },
   { from: boxesHSource, to: "src/boxes.h" },
@@ -51,10 +52,17 @@ const assetFiles: AssetFile[] = [
   { from: unicodeBlocksHSource, to: "src/unicodeblocks.h" },
 ];
 
-let stagedBridgeSourcePromise: Promise<string> | undefined;
-
 function createHeaderGuardName(path: string): string {
   return `RAT_LIBTEXPRINTF_${path.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_`;
+}
+
+function removeMathHeaderInclude(text: string): string {
+  return text.replace("#include <math.h>\n", "");
+}
+
+function wrapHeaderWithGuard(path: string, text: string): string {
+  const guardName = createHeaderGuardName(path);
+  return `#ifndef ${guardName}\n#define ${guardName}\n${text}\n#endif\n`;
 }
 
 async function stageAssetFile(rootDir: string, assetFile: AssetFile): Promise<void> {
@@ -62,27 +70,37 @@ async function stageAssetFile(rootDir: string, assetFile: AssetFile): Promise<vo
   await mkdir(dirname(outputPath), { recursive: true });
   if (assetFile.to === "src/lexer.c") {
     const lexerSource = await Bun.file(assetFile.from).text();
-    await Bun.write(outputPath, lexerSource.replace("#include <math.h>\n", ""));
+    await Bun.write(outputPath, removeMathHeaderInclude(lexerSource));
     return;
   }
 
   if (assetFile.to.endsWith(".h")) {
     const headerText = await Bun.file(assetFile.from).text();
-    const guardName = createHeaderGuardName(assetFile.to);
-    const wrappedHeader = `#ifndef ${guardName}\n#define ${guardName}\n${headerText}\n#endif\n`;
-    await Bun.write(outputPath, wrappedHeader);
+    await Bun.write(outputPath, wrapHeaderWithGuard(assetFile.to, headerText));
     return;
   }
 
   await Bun.write(outputPath, Bun.file(assetFile.from));
 }
 
-export function getStagedBridgeSourceFile(): Promise<string> {
-  stagedBridgeSourcePromise ??= (async () => {
-    const rootDir = await mkdtemp(join(tmpdir(), "rat-libtexprintf-"));
-    await Promise.all(assetFiles.map((assetFile) => stageAssetFile(rootDir, assetFile)));
-    return join(rootDir, "ffi_bridge.c");
-  })();
+export class StagedBridgeSource {
+  constructor(
+    public readonly rootDir: string,
+    public readonly bridgeSourceFile: string,
+  ) {}
 
-  return stagedBridgeSourcePromise;
+  [Symbol.dispose](): void {
+    rmSync(this.rootDir, { recursive: true, force: true });
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    this[Symbol.dispose]();
+    return Promise.resolve();
+  }
+}
+
+export async function stageBridgeSourceFile(): Promise<StagedBridgeSource> {
+  const rootDir = await mkdtemp(join(tmpdir(), "rat-libtexprintf-"));
+  await Promise.all(assetFiles.map((assetFile) => stageAssetFile(rootDir, assetFile)));
+  return new StagedBridgeSource(rootDir, join(rootDir, "ffi_bridge.c"));
 }
