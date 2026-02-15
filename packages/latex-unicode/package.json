@@ -1,0 +1,14 @@
+{
+  "name": "@rat/latex-unicode",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@rat/bun-libtexprintf": "workspace:*",
+    "unicodeit": "^0.7.5"
+  }
+}
