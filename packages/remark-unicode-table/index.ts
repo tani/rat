@@ -75,7 +75,7 @@ const remarkUnicodeTable: Plugin<[], Root> = function remarkUnicodeTable() {
       const parentWithChildren = ParentWithChildrenSchema(parent);
       if (parentWithChildren instanceof arktype.type.errors) return;
       const rendered = renderTable(node);
-      const code: Code = { type: "code", lang: "", value: rendered };
+      const code: Code = { type: "code", lang: "raw", meta: null, value: rendered };
       parentWithChildren.children[index] = code;
     });
   };

@@ -13,10 +13,11 @@ describe("remark-unicode-table", () => {
         .use(remarkParse)
         .use(remarkGfm)
         .use(remarkUnicodeTable)
-        .use(remarkStringify)
+        .use(remarkStringify, { fences: true })
         .process(input),
     );
 
+    expect(out).toContain("```raw");
     expect(out).toContain("┌");
     expect(out).toContain("┬");
     expect(out).toContain("┐");
@@ -32,10 +33,11 @@ describe("remark-unicode-table", () => {
         .use(remarkParse)
         .use(remarkGfm)
         .use(remarkUnicodeTable)
-        .use(remarkStringify)
+        .use(remarkStringify, { fences: true })
         .process(input),
     );
 
+    expect(out).toContain("```raw");
     const lines = out.split("\n");
     const dataLine = lines.find((line) => line.includes("bb"));
     expect(dataLine).toBeDefined();
