@@ -56,3 +56,12 @@ test("remark-unicode-inline: output inline content is plain text nodes", () => {
   expect(firstChild).toBeDefined();
   expect(firstChild?.type).toBe("text");
 });
+
+test("remark-unicode-inline: inline code maps to mathematical monospace", async () => {
+  const input = "`Abc123`";
+  const out = String(
+    await unified().use(remarkParse).use(remarkUnicodeInline).use(remarkStringify).process(input),
+  );
+
+  expect(out.trim()).toBe("𝙰𝚋𝚌𝟷𝟸𝟹");
+});

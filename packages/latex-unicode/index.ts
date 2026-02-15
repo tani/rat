@@ -40,6 +40,7 @@ const INLINE_COMMANDS: readonly { cmd: string; style: InlineStyle }[] = [
   { cmd: "\\textbf", style: "bold" },
   { cmd: "\\textit", style: "italic" },
   { cmd: "\\emph", style: "italic" },
+  { cmd: "\\texttt", style: "typewriter" },
 ];
 
 const DISPLAY_ENVS = ["aligned", "align*", "align"] as const;
@@ -69,11 +70,30 @@ function parseBraced(
   return null;
 }
 
+function parseVerb(source: string, from: number): { content: string; end: number } | null {
+  if (!source.startsWith("\\verb", from)) return null;
+  let i = from + "\\verb".length;
+  if (source[i] === "*") i += 1;
+  const delimiter = source[i];
+  if (!delimiter || /[A-Za-z\s]/.test(delimiter)) return null;
+  const contentStart = i + 1;
+  const end = source.indexOf(delimiter, contentStart);
+  if (end === -1) return null;
+  return { content: source.slice(contentStart, end), end: end + 1 };
+}
+
 function renderInlineCommands(input: string): string {
   let out = "";
   let i = 0;
 
   while (i < input.length) {
+    const verb = parseVerb(input, i);
+    if (verb) {
+      out += stylizeMath(verb.content, "typewriter");
+      i = verb.end;
+      continue;
+    }
+
     let matched = false;
     for (const { cmd, style } of INLINE_COMMANDS) {
       if (!input.startsWith(cmd, i)) continue;

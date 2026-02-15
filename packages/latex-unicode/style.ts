@@ -1,4 +1,4 @@
-export type InlineStyle = "plain" | "italic" | "bold" | "boldItalic";
+export type InlineStyle = "plain" | "italic" | "bold" | "boldItalic" | "typewriter";
 
 function mapMathAlpha(ch: string, style: InlineStyle): string {
   const cp = ch.codePointAt(0);
@@ -18,6 +18,12 @@ function mapMathAlpha(ch: string, style: InlineStyle): string {
   if (style === "boldItalic") {
     if (cp >= 0x41 && cp <= 0x5a) return String.fromCodePoint(0x1d63c + (cp - 0x41));
     if (cp >= 0x61 && cp <= 0x7a) return String.fromCodePoint(0x1d656 + (cp - 0x61));
+  }
+
+  if (style === "typewriter") {
+    if (cp >= 0x41 && cp <= 0x5a) return String.fromCodePoint(0x1d670 + (cp - 0x41));
+    if (cp >= 0x61 && cp <= 0x7a) return String.fromCodePoint(0x1d68a + (cp - 0x61));
+    if (cp >= 0x30 && cp <= 0x39) return String.fromCodePoint(0x1d7f6 + (cp - 0x30));
   }
 
   return ch;

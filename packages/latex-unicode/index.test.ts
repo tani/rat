@@ -3,9 +3,10 @@ import { renderLatex } from "./index";
 
 describe("latex-unicode inline", () => {
   test("renders inline text commands with unicode styling", async () => {
-    const out = await renderLatex("A \\textbf{abc123} and \\textit{XYZ}.");
+    const out = await renderLatex("A \\textbf{abc123} and \\textit{XYZ} and \\texttt{Abc123}.");
     expect(out.text).toContain("𝗮𝗯𝗰𝟭𝟮𝟯");
     expect(out.text).toContain("𝘟𝘠𝘡");
+    expect(out.text).toContain("𝙰𝚋𝚌𝟷𝟸𝟹");
     expect(out.sourcemap.version).toBe(2);
     expect(out.sourcemap.segments.length).toBeGreaterThan(0);
   });
@@ -19,6 +20,11 @@ describe("latex-unicode inline", () => {
   test("renders inline parenthesized math with unicodeit", async () => {
     const out = await renderLatex("Term: \\(\\alpha^2 + \\beta\\).");
     expect(out.text).toContain("α² + β");
+  });
+
+  test("renders \\verb with typewriter style", async () => {
+    const out = await renderLatex("Code: \\verb|Abc123| and \\verb*+Xy9+.");
+    expect(out.text).toContain("Code: 𝙰𝚋𝚌𝟷𝟸𝟹 and 𝚇𝚢𝟿.");
   });
 });
 
