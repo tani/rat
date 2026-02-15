@@ -58,7 +58,7 @@ export function add(a: number, b: number): number {
 ```
 
 ```bash
-deno run -A src/rat.ts EXAMPLE.md
+deno run -A src/rat.ts examples/EXAMPLE.md
 ```
 
 ## Table

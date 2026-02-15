@@ -1,0 +1,43 @@
+% rat latex-unicode comprehensive demonstration
+
+This file demonstrates text commands, inline math, and display math.
+
+\textbf{Bold text} / \textit{Italic text} / \emph{Emphasized text}
+
+Inline math with $...$:
+$E=mc^2$, $\alpha + \beta \to \gamma$, $\sum_{k=1}^{n} k$
+
+Inline math with \(...\):
+\(\int_0^1 x^2\,dx\), \(\frac{a}{b}\), \(\sqrt{x^2+y^2}\)
+
+Display math with $$...$$:
+$$
+\frac{1}{2} + \sum_{k=1}^{n} k
+$$
+
+Display math with \[...\]:
+\[
+\left(\frac{a+b}{c}\right)^2 = \frac{a^2 + 2ab + b^2}{c^2}
+\]
+
+Aligned environment:
+\begin{aligned}
+f(x) &= x^2 + 2x + 1 \\
+g(x) &= \frac{1}{x} + \sqrt{x}
+\end{aligned}
+
+Align environment:
+\begin{align}
+a &= b + c \\
+d &= \frac{1}{2}
+\end{align}
+
+Align* environment:
+\begin{align*}
+\nabla \cdot \vec{E} &= \frac{\rho}{\varepsilon_0} \\
+\nabla \times \vec{B} &= \mu_0 \vec{J}
+\end{align*}
+
+Mixed paragraph:
+When \textbf{style} and math are combined, for example $x^2$ and \(\beta\),
+output should remain plain Unicode text.
