@@ -10,7 +10,7 @@
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
     "test:vim": "bun test vim/rat_vim.test.ts",
-    "compile": "./scripts/compile-all-platforms.sh",
+    "compile": "bun run build.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
