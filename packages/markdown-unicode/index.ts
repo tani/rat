@@ -9,6 +9,7 @@ import remarkUnicodeInline from "@rat/remark-unicode-inline";
 import remarkUnicodeMath from "@rat/remark-unicode-math";
 import remarkUnicodeMermaid from "@rat/remark-unicode-mermaid";
 import remarkUnicodeTable from "@rat/remark-unicode-table";
+import remarkUnicodeCodeblock from "@rat/remark-unicode-codeblock";
 
 export interface RenderedMarkdown {
   markdown: string;
@@ -58,6 +59,7 @@ export async function renderMarkdown(input: string): Promise<RenderedMarkdown> {
     .use(remarkUnicodeMermaid)
     .use(remarkUnicodeInline)
     .use(remarkUnicodeTable)
+    .use(remarkUnicodeCodeblock)
     .use(remarkSourcemap)
     .use(remarkStringify, {
       bullet: "-",

@@ -41,4 +41,11 @@ describe("@rat/markdown-unicode renderMarkdown", () => {
 
     expect(out.markdown).toContain("h̲t̲t̲p̲:̲/̲/̲e̲x̲a̲m̲p̲l̲e̲.̲c̲o̲m̲");
   });
+
+  test("converts code block content to mathematical monospace", async () => {
+    const input = "```txt\nAbc123 +-*/\n```\n";
+    const out = await renderMarkdown(input);
+
+    expect(out.markdown).toContain("𝙰𝚋𝚌𝟷𝟸𝟹 +-*/");
+  });
 });

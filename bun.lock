@@ -48,6 +48,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@rat/remark-sourcemap": "workspace:*",
+        "@rat/remark-unicode-codeblock": "workspace:*",
         "@rat/remark-unicode-inline": "workspace:*",
         "@rat/remark-unicode-math": "workspace:*",
         "@rat/remark-unicode-mermaid": "workspace:*",
@@ -71,6 +72,16 @@
         "unified": "^11.0.5",
         "unist-util-visit": "^5.1.0",
         "vfile": "^6.0.3",
+      },
+    },
+    "packages/remark-unicode-codeblock": {
+      "name": "@rat/remark-unicode-codeblock",
+      "version": "0.0.0",
+      "dependencies": {
+        "remark-parse": "^11.0.0",
+        "remark-stringify": "^11.0.0",
+        "unified": "^11.0.5",
+        "unist-util-visit": "^5.1.0",
       },
     },
     "packages/remark-unicode-inline": {
@@ -206,6 +217,8 @@
     "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/markdown-unicode"],
 
     "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
+
+    "@rat/remark-unicode-codeblock": ["@rat/remark-unicode-codeblock@workspace:packages/remark-unicode-codeblock"],
 
     "@rat/remark-unicode-inline": ["@rat/remark-unicode-inline@workspace:packages/remark-unicode-inline"],
 

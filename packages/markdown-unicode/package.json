@@ -12,6 +12,7 @@
     "@rat/remark-unicode-inline": "workspace:*",
     "@rat/remark-unicode-math": "workspace:*",
     "@rat/remark-unicode-mermaid": "workspace:*",
+    "@rat/remark-unicode-codeblock": "workspace:*",
     "@rat/remark-unicode-table": "workspace:*",
     "arktype": "^2.1.29",
     "remark-gfm": "^4.0.1",
