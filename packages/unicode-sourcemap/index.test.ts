@@ -68,3 +68,54 @@ test("mapLines is monotonic", () => {
     expect((lines[i] ?? 0) >= (lines[i - 1] ?? 0)).toBe(true);
   }
 });
+
+test("mapCursor at line start avoids far jumps from line-similarity", () => {
+  const source = "start\ncpfj ldw wmqwpcdy\nend\nxoeogyve\nmbanvvr";
+  const target = [
+    "start",
+    "psssz celdt ukfhah",
+    "end",
+    "wyfwp idzcx",
+    "lshdndg smffsw",
+    "svkddoq ltlbcvzu",
+    "khmv fingkaqj",
+    "gpsop jkyg",
+    "yoyagony sviorbil",
+    "zaohqrm snav",
+    "xtnzzqu oqg",
+    "ayljooa pbdcg",
+    "olzr jshxwo",
+    "tphdgc luqvh",
+    "ljsntrh yuwepns",
+    "lbv kzrp",
+    "moy dvz",
+    "dfuwwwc yqoxttl",
+    "gmpgeld rffcvzk",
+    "dcvgl jshgyt",
+    "weh xumb",
+    "lxbscth wsbv",
+    "gtek tlnsfbnr",
+    "gjwphyyr ziftoc",
+    "swq ltddjnh",
+    "batj lvkow",
+    "penf gzkuz",
+    "vhkxpf hzidsu",
+    "orevkjxw hpedbtf",
+    "mqsdbos ijzhufyh",
+    "hwuh jbbwnl",
+    "kwdkmexh ipcbudxs",
+    "kgbiul booi",
+    "cpfj ldw wmqwpcdy",
+    "wbz",
+  ].join("\n");
+
+  const map = createUnicodeSourcemap(source, target);
+
+  const offsetAtLineStart = map.mapOffset(source.indexOf("cpfj ldw wmqwpcdy"));
+  const cursorAtLineStart = map.mapCursor({ line: 2, column: 1 });
+  const lineLevel = map.mapLine(2);
+
+  expect(lineLevel.strategy).toBe("line-similarity");
+  expect(Math.abs(lineLevel.targetLine - offsetAtLineStart.targetLine)).toBeGreaterThan(6);
+  expect(cursorAtLineStart.targetLine).toBe(offsetAtLineStart.targetLine);
+});

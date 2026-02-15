@@ -422,16 +422,23 @@ export function createUnicodeSourcemap(sourceText: string, targetText: string): 
     if (cursor.column > 1) return offsetMapping;
 
     const lineMapping = mapLine(cursor.line);
-    const { start } = lineRange(targetText, targetLineStarts, lineMapping.targetLine);
+    const lineDelta = Math.abs(lineMapping.targetLine - offsetMapping.targetLine);
+    const preferOffsetLine = lineMapping.strategy === "line-similarity" && lineDelta > 6;
+
+    const resolvedLine = preferOffsetLine ? offsetMapping.targetLine : lineMapping.targetLine;
+    const resolvedStrategy = preferOffsetLine ? offsetMapping.strategy : lineMapping.strategy;
+    const resolvedConfidence = preferOffsetLine ? offsetMapping.confidence : lineMapping.confidence;
+
+    const { start } = lineRange(targetText, targetLineStarts, resolvedLine);
     const lineStartColumn = offsetToColumn(targetText, targetLineStarts, start);
 
     return {
       ...offsetMapping,
       targetOffset: start,
-      targetLine: lineMapping.targetLine,
+      targetLine: resolvedLine,
       targetColumn: lineStartColumn,
-      strategy: lineMapping.strategy,
-      confidence: lineMapping.confidence,
+      strategy: resolvedStrategy,
+      confidence: resolvedConfidence,
     };
   };
 
