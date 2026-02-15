@@ -1,5 +1,5 @@
 import { CString, cc } from "bun:ffi";
-import { getStagedBridgeSourceFile } from "./libtexprintf/assets";
+import { getStagedBridgeSourceFile } from "./assets.ts";
 
 export type LibtexprintfRenderer = (latex: string) => string;
 
