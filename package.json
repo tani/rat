@@ -1,5 +1,5 @@
 {
-  "name": "mdd-v2",
+  "name": "rat",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -9,12 +9,12 @@
     "lint": "oxlint -D suspicious -D pedantic -D perf --deny-warnings .",
     "format": "oxfmt --write \"packages/**/*.ts\" \"*.ts\"",
     "format:check": "oxfmt --check \"packages/**/*.ts\" \"*.ts\"",
-    "test:vim": "bun test vim/mdd_vim.test.ts",
+    "test:vim": "bun test vim/rat_vim.test.ts",
     "compile": "./scripts/compile-all-platforms.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mdd/core": "workspace:*"
+    "@rat/core": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -100,7 +100,7 @@ function parseJsonRpcResult(line: string): {
   };
 }
 
-describe("@mdd/cli", () => {
+describe("@rat/cli", () => {
   test("reads from stdin and writes rendered markdown to stdout", async () => {
     const { out, err, code } = await runStdioRender("# Title\n\n*abc*\n");
 

@@ -1,5 +1,5 @@
 {
-  "name": "@mdd/remark-sourcemap",
+  "name": "@rat/remark-sourcemap",
   "version": "0.0.0",
   "private": true,
   "type": "module",

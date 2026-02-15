@@ -15,12 +15,12 @@
 #include "src/parser.c"
 #include "src/texprintf.c"
 
-char *mdd_texstring(const char *input)
+char *rat_texstring(const char *input)
 {
 	return texstring(input);
 }
 
-void mdd_texfree(void *ptr)
+void rat_texfree(void *ptr)
 {
 	texfree(ptr);
 }

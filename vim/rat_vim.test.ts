@@ -22,7 +22,7 @@ function writeMockMdd(tempDir: string): void {
     "done",
     "",
   ].join("\n");
-  const path = join(tempDir, "mdd");
+  const path = join(tempDir, "rat");
   writeFileSync(path, script);
   chmodSync(path, 0o755);
 }
@@ -31,16 +31,16 @@ function writeNvimScript(tempDir: string, repoRoot: string): string {
   const script = [
     "set nomore",
     `execute 'set rtp^=' . fnameescape('${repoRoot}/vim')`,
-    "runtime plugin/mdd.vim",
+    "runtime plugin/rat.vim",
     `execute 'cd ' . fnameescape('${tempDir}')`,
     "edit test.md",
     "call setline(1, ['# Title', '', '*abc*'])",
-    "MddPreviewOpen",
+    "RatPreviewOpen",
     "sleep 300m",
     "call setline(4, 'edited-unsaved')",
     "doautocmd TextChanged",
     "sleep 300m",
-    "MddPreviewClose",
+    "RatPreviewClose",
     "qa!",
     "",
   ].join("\n");
@@ -58,7 +58,7 @@ describe("vim preview plugin", () => {
     }
 
     const repoRoot = resolve(process.cwd());
-    const tempDir = mkdtempSync(join(tmpdir(), "mdd-vim-test-"));
+    const tempDir = mkdtempSync(join(tmpdir(), "rat-vim-test-"));
 
     try {
       writeMockMdd(tempDir);

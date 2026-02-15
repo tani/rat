@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { renderMarkdown } from "@mdd/core";
+import { renderMarkdown } from "@rat/core";
 
 async function readStdin(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();

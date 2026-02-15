@@ -3,11 +3,11 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkStringify from "remark-stringify";
-import remarkSourcemap, { type RemarkSourcemapData } from "@mdd/remark-sourcemap";
-import remarkUnicodeInline from "@mdd/remark-unicode-inline";
-import remarkUnicodeMath from "@mdd/remark-unicode-math";
-import remarkUnicodeMermaid from "@mdd/remark-unicode-mermaid";
-import remarkUnicodeTable from "@mdd/remark-unicode-table";
+import remarkSourcemap, { type RemarkSourcemapData } from "@rat/remark-sourcemap";
+import remarkUnicodeInline from "@rat/remark-unicode-inline";
+import remarkUnicodeMath from "@rat/remark-unicode-math";
+import remarkUnicodeMermaid from "@rat/remark-unicode-mermaid";
+import remarkUnicodeTable from "@rat/remark-unicode-table";
 
 export type RenderedMarkdown = {
   markdown: string;

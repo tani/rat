@@ -8,16 +8,16 @@ const encoder = new TextEncoder();
 export async function getLibtexprintfRenderer(): Promise<LibtexprintfRenderer> {
   const bridgeSourceFile = await getStagedBridgeSourceFile();
   const {
-    symbols: { mdd_texfree, mdd_texstring },
+    symbols: { rat_texfree, rat_texstring },
   } = cc({
     source: bridgeSourceFile,
     flags: ["-w"],
     symbols: {
-      mdd_texstring: {
+      rat_texstring: {
         args: ["cstring"],
         returns: "ptr",
       },
-      mdd_texfree: {
+      rat_texfree: {
         args: ["ptr"],
         returns: "void",
       },
@@ -25,7 +25,7 @@ export async function getLibtexprintfRenderer(): Promise<LibtexprintfRenderer> {
   });
 
   return (latex: string) => {
-    const outputPtr = mdd_texstring(encoder.encode(`${latex}\0`));
+    const outputPtr = rat_texstring(encoder.encode(`${latex}\0`));
     if (!outputPtr) {
       return "";
     }
@@ -33,7 +33,7 @@ export async function getLibtexprintfRenderer(): Promise<LibtexprintfRenderer> {
     try {
       return new CString(outputPtr).toString();
     } finally {
-      mdd_texfree(outputPtr);
+      rat_texfree(outputPtr);
     }
   };
 }

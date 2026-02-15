@@ -1,5 +1,5 @@
 {
-  "name": "@mdd/remark-unicode-math",
+  "name": "@rat/remark-unicode-math",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     ".": "./index.ts"
   },
   "dependencies": {
-    "@mdd/bun-libtexprintf": "workspace:*",
+    "@rat/bun-libtexprintf": "workspace:*",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",

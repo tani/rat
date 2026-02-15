@@ -36,8 +36,8 @@ jobs:
           prerelease: true
           title: "Nightly Build"
           files: |
-            dist/mdd-linux-x64
-            dist/mdd-linux-arm64
-            dist/mdd-darwin-x64
-            dist/mdd-darwin-arm64
-            dist/mdd-windows-x64.exe
+            dist/rat-linux-x64
+            dist/rat-linux-arm64
+            dist/rat-darwin-x64
+            dist/rat-darwin-arm64
+            dist/rat-windows-x64.exe

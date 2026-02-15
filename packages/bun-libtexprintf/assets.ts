@@ -54,7 +54,7 @@ const assetFiles: AssetFile[] = [
 let stagedBridgeSourcePromise: Promise<string> | undefined;
 
 function createHeaderGuardName(path: string): string {
-  return `MDD_LIBTEXPRINTF_${path.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_`;
+  return `RAT_LIBTEXPRINTF_${path.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_`;
 }
 
 async function stageAssetFile(rootDir: string, assetFile: AssetFile): Promise<void> {
@@ -80,7 +80,7 @@ async function stageAssetFile(rootDir: string, assetFile: AssetFile): Promise<vo
 export function getStagedBridgeSourceFile(): Promise<string> {
   if (!stagedBridgeSourcePromise) {
     stagedBridgeSourcePromise = (async () => {
-      const rootDir = await mkdtemp(join(tmpdir(), "mdd-libtexprintf-"));
+      const rootDir = await mkdtemp(join(tmpdir(), "rat-libtexprintf-"));
       await Promise.all(assetFiles.map((assetFile) => stageAssetFile(rootDir, assetFile)));
       return join(rootDir, "ffi_bridge.c");
     })();

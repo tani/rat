@@ -1,4 +1,4 @@
-import { getLibtexprintfRenderer } from "@mdd/bun-libtexprintf";
+import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import unicodeit from "unicodeit";
 import type { Code, InlineCode, Parent, Root } from "mdast";
 import type { Plugin } from "unified";

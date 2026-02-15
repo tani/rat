@@ -1,5 +1,5 @@
 {
-  "name": "@mdd/remark-unicode-mermaid",
+  "name": "@rat/remark-unicode-mermaid",
   "version": "0.0.0",
   "private": true,
   "type": "module",
