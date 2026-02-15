@@ -5,7 +5,7 @@
     "": {
       "name": "rat",
       "dependencies": {
-        "@rat/core": "workspace:*",
+        "@rat/markdown-unicode": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -27,11 +27,11 @@
         "rat": "./index.ts",
       },
       "dependencies": {
-        "@rat/core": "workspace:*",
+        "@rat/markdown-unicode": "workspace:*",
       },
     },
     "packages/core": {
-      "name": "@rat/core",
+      "name": "@rat/markdown-unicode",
       "version": "0.0.0",
       "dependencies": {
         "@rat/remark-sourcemap": "workspace:*",
@@ -44,6 +44,14 @@
         "remark-parse": "^11.0.0",
         "remark-stringify": "^11.0.0",
         "unified": "^11.0.5",
+      },
+    },
+    "packages/latex-unicode": {
+      "name": "@rat/latex-unicode",
+      "version": "0.0.0",
+      "dependencies": {
+        "@rat/bun-libtexprintf": "workspace:*",
+        "unicodeit": "^0.7.5",
       },
     },
     "packages/remark-sourcemap": {
@@ -191,7 +199,9 @@
 
     "@rat/cli": ["@rat/cli@workspace:packages/cli"],
 
-    "@rat/core": ["@rat/core@workspace:packages/core"],
+    "@rat/markdown-unicode": ["@rat/markdown-unicode@workspace:packages/core"],
+
+    "@rat/latex-unicode": ["@rat/latex-unicode@workspace:packages/latex-unicode"],
 
     "@rat/remark-sourcemap": ["@rat/remark-sourcemap@workspace:packages/remark-sourcemap"],
 
