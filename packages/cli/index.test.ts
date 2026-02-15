@@ -9,10 +9,6 @@ const JsonRpcRenderResultSchema = arktype.type({
   id: "number",
   result: {
     text: "string",
-    sourcemap: {
-      version: "number",
-      segments: "unknown[]",
-    },
     "previewLine?": "number | null",
   },
 });
@@ -51,10 +47,6 @@ async function runJsonRpcRender(): Promise<{
     id: number;
     result: {
       text: string;
-      sourcemap: {
-        version: number;
-        segments: unknown[];
-      };
       previewLine: number | null;
     };
   };
@@ -79,10 +71,6 @@ async function runJsonRpcRenderWithRequest(request: unknown): Promise<{
     id: number;
     result: {
       text: string;
-      sourcemap: {
-        version: number;
-        segments: unknown[];
-      };
       previewLine: number | null;
     };
   };
@@ -111,10 +99,6 @@ function parseJsonRpcResult(line: string): {
   id: number;
   result: {
     text: string;
-    sourcemap: {
-      version: number;
-      segments: unknown[];
-    };
     previewLine: number | null;
   };
 } {
@@ -151,8 +135,6 @@ describe("@rat/cli markdown stdin/json-rpc", () => {
     expect(parsed.id).toBe(1);
     expect(parsed.result.text).toContain("Title\n=====");
     expect(parsed.result.text).toContain("𝘢𝘣𝘤");
-    expect(parsed.result.sourcemap.version).toBe(2);
-    expect(Array.isArray(parsed.result.sourcemap.segments)).toBe(true);
     expect(typeof parsed.result.previewLine).toBe("number");
   });
 
@@ -278,8 +260,6 @@ describe("@rat/cli latex json-rpc", () => {
     expect(parsed.jsonrpc).toBe("2.0");
     expect(parsed.id).toBe(2);
     expect(parsed.result.text).toContain("A: α+β");
-    expect(parsed.result.sourcemap.version).toBe(2);
-    expect(Array.isArray(parsed.result.sourcemap.segments)).toBe(true);
     expect(typeof parsed.result.previewLine).toBe("number");
   });
 });

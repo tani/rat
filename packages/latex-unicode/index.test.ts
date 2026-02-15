@@ -7,8 +7,6 @@ describe("latex-unicode inline", () => {
     expect(out.text).toContain("𝗮𝗯𝗰𝟭𝟮𝟯");
     expect(out.text).toContain("𝘟𝘠𝘡");
     expect(out.text).toContain("𝙰𝚋𝚌𝟷𝟸𝟹");
-    expect(out.sourcemap.version).toBe(2);
-    expect(out.sourcemap.segments.length).toBeGreaterThan(0);
   });
 
   test("renders inline math with unicodeit", async () => {
@@ -59,7 +57,6 @@ describe("latex-unicode display", () => {
     expect(out.text).not.toContain("\\frac");
     expect(out.text).toContain("before");
     expect(out.text).toContain("after");
-    expect(out.sourcemap.segments.length).toBeGreaterThan(0);
   });
 
   test("renders multiline $$ display blocks", async () => {

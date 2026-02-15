@@ -13,8 +13,6 @@ describe("@rat/markdown-unicode renderMarkdown", () => {
     expect(out.markdown).toContain("a̲l̲t̲\\_̲t̲e̲x̲t̲");
     expect(out.markdown).toContain("┌");
     expect(out.markdown).toContain("─");
-    expect(out.sourcemap.version).toBe(2);
-    expect(out.sourcemap.segments.length).toBeGreaterThan(0);
   });
 
   test("uses setext headings and non-fenced code blocks", async () => {

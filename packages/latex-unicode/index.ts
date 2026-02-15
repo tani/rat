@@ -2,19 +2,6 @@ import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import { renderBussproofs } from "@rat/bussproofs-unicode";
 import unicodeit from "unicodeit";
 import { type InlineStyle, stylizeMath } from "./style";
-import {
-  buildLineStarts,
-  type LatexSourcemapData,
-  type LatexSourcemapSegment,
-  rangeFromOffsets,
-} from "./sourcemap";
-
-export type {
-  LatexSourcemapData,
-  LatexSourcemapPoint,
-  LatexSourcemapRange,
-  LatexSourcemapSegment,
-} from "./sourcemap";
 
 interface ParsedSpan {
   value: string;
@@ -30,7 +17,6 @@ interface Segment {
 
 export interface RenderedLatex {
   text: string;
-  sourcemap: LatexSourcemapData;
 }
 
 export interface RenderLatexOptions {
@@ -287,30 +273,7 @@ export async function renderLatex(
     renderedSegments.push(await displayToUnicode(segment.value, options.displayRenderer));
   }
 
-  const text = renderedSegments.join("");
-  const inputLineStarts = buildLineStarts(normalizedInput);
-  const outputLineStarts = buildLineStarts(text);
-  const sourcemapSegments: LatexSourcemapSegment[] = [];
-
-  let outputOffset = 0;
-  for (let i = 0; i < segments.length; i += 1) {
-    const sourceSegment = segments[i];
-    const rendered = renderedSegments[i] ?? "";
-    const outputStart = outputOffset;
-    const outputEnd = outputOffset + rendered.length;
-    outputOffset = outputEnd;
-
-    if (!sourceSegment || rendered.length === 0) continue;
-
-    sourcemapSegments.push({
-      nodeType: sourceSegment.type,
-      input: rangeFromOffsets(sourceSegment.start, sourceSegment.end, inputLineStarts),
-      output: rangeFromOffsets(outputStart, outputEnd, outputLineStarts),
-    });
-  }
-
   return {
-    text,
-    sourcemap: { version: 2, segments: sourcemapSegments },
+    text: renderedSegments.join(""),
   };
 }

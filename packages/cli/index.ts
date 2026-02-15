@@ -2,6 +2,7 @@
 import * as arktype from "arktype";
 import { renderLatex } from "@rat/latex-unicode";
 import { renderMarkdown } from "@rat/markdown-unicode";
+import { unicodeSourcemap } from "@rat/unicode-sourcemap";
 
 async function readStdin(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();
@@ -46,27 +47,6 @@ interface RenderParams {
   language?: "markdown" | "latex";
 }
 
-interface SourcemapSegment {
-  output: {
-    start: {
-      line: number;
-    };
-  };
-  input: {
-    start: {
-      line: number;
-    };
-    end: {
-      line: number;
-    };
-  };
-}
-
-interface SourcemapData {
-  version: 2;
-  segments: SourcemapSegment[];
-}
-
 const CursorSchema = arktype.type({
   line: "number.integer >= 1",
   column: "number.integer >= 1",
@@ -76,11 +56,6 @@ const RenderParamsSchema = arktype.type({
   text: "string",
   "cursor?": CursorSchema,
   "language?": "'markdown' | 'latex'",
-});
-
-const SourcemapSchema = arktype.type({
-  version: "2",
-  segments: "unknown[]",
 });
 
 const JsonRpcRequestSchema = arktype.type({
@@ -106,18 +81,47 @@ function parseRenderParams(value: unknown): RenderParams | undefined {
   };
 }
 
-function resolvePreviewLine(sourcemap: SourcemapData, sourceLine: number): number {
-  const candidate = sourcemap.segments.find((segment) => {
-    const start = segment.input.start.line;
-    const end = segment.input.end.line;
-    return sourceLine >= start && sourceLine <= end;
-  });
-  if (candidate) return candidate.output.start.line;
-  return sourceLine;
+function buildLineStarts(text: string): number[] {
+  const starts = [0];
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === "\n") starts.push(i + 1);
+  }
+  return starts;
 }
 
-function isSourcemapData(value: unknown): value is SourcemapData {
-  return !(SourcemapSchema(value) instanceof arktype.type.errors);
+function offsetToLine(lineStarts: number[], offset: number): number {
+  let low = 0;
+  let high = lineStarts.length - 1;
+  let best = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const lineStart = lineStarts[mid] ?? 0;
+    if (lineStart <= offset) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best + 1;
+}
+
+function cursorToOffset(text: string, cursor: Cursor): number {
+  if (text.length === 0) return 0;
+  const lineStarts = buildLineStarts(text);
+  const lineIndex = Math.min(Math.max(0, cursor.line - 1), lineStarts.length - 1);
+  const lineStart = lineStarts[lineIndex] ?? 0;
+  const nextLineStart = lineStarts[lineIndex + 1] ?? text.length;
+  const lineEnd = nextLineStart > 0 && text[nextLineStart - 1] === "\n" ? nextLineStart - 1 : nextLineStart;
+  return Math.min(lineStart + Math.max(0, cursor.column - 1), lineEnd);
+}
+
+function resolvePreviewLine(sourceText: string, outputText: string, cursor: Cursor): number {
+  const sourceOffset = cursorToOffset(sourceText, cursor);
+  const outputOffset = unicodeSourcemap(sourceText, outputText, sourceOffset);
+  return offsetToLine(buildLineStarts(outputText), outputOffset);
 }
 
 function writeJson(value: unknown): void {
@@ -153,29 +157,24 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
     writeJsonRpcError(id ?? null, -32602, "Invalid params");
     return;
   }
+
   if (params.language === "latex") {
     const rendered = await renderLatex(params.text);
-    if (!isSourcemapData(rendered.sourcemap)) {
-      writeJsonRpcError(id ?? null, -32603, "Invalid sourcemap");
-      return;
-    }
-    const previewLine = params.cursor
-      ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
-      : null;
+    const previewLine = params.cursor ? resolvePreviewLine(params.text, rendered.text, params.cursor) : null;
     writeJsonRpcResult(id, {
       text: rendered.text,
-      sourcemap: rendered.sourcemap,
       previewLine,
     });
     return;
   }
+
   const rendered = await renderMarkdown(params.text);
   const previewLine = params.cursor
-    ? resolvePreviewLine(rendered.sourcemap, params.cursor.line)
+    ? resolvePreviewLine(params.text, rendered.markdown, params.cursor)
     : null;
+
   writeJsonRpcResult(id, {
     text: rendered.markdown,
-    sourcemap: rendered.sourcemap,
     previewLine,
   });
 }
