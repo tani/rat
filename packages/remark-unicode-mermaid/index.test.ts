@@ -17,6 +17,7 @@ A-->B
   );
 
   expect(out).toContain("```");
+  expect(out).toContain("```raw");
   expect(out).toContain("A--");
   expect(out).not.toContain("```mermaid");
 });

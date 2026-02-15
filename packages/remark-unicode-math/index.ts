@@ -18,7 +18,7 @@ function toInlineCode(value: string): InlineCode {
 }
 
 function toCode(value: string): Code {
-  return { type: "code", value };
+  return { type: "code", value, lang: "raw", meta: null };
 }
 
 function isLikelyFailedLibtexprintf(input: string, output: string): boolean {

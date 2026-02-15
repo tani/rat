@@ -27,6 +27,7 @@ describe("remark-unicode-bussproofs", () => {
     expect(out).toContain("A → B");
     expect(out).toContain("→ E");
     expect(out).toContain("─");
+    expect(out).toContain("```raw");
     expect(out).not.toContain("AxiomC");
     expect(out).not.toContain("~~~bussproofs");
   });
@@ -51,6 +52,7 @@ describe("remark-unicode-bussproofs", () => {
 
     expect(out).toContain("P");
     expect(out).toContain("─");
+    expect(out).toContain("```raw");
     expect(out).not.toContain("\\begin{prooftree}");
   });
 
@@ -77,6 +79,7 @@ $$
     expect(out).toContain("A → B");
     expect(out).toContain("→ E");
     expect(out).toContain("─");
+    expect(out).toContain("```raw");
     expect(out).not.toContain("$$");
     expect(out).not.toContain("\\begin{prooftree}");
   });

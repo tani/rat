@@ -77,7 +77,7 @@ $$
     const out = await renderMarkdown(input);
 
     expect(out.markdown).toContain("→");
-    expect(out.markdown).toContain("→ 𝙴");
+    expect(out.markdown).toContain("→ E");
     expect(out.markdown).toContain("─");
     expect(out.markdown).not.toContain("\\begin{prooftree}");
     expect(out.markdown).not.toContain("$$");

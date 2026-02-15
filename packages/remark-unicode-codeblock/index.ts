@@ -20,6 +20,7 @@ function toMonospace(value: string): string {
 const remarkUnicodeCodeblock: Plugin<[], Root> = function remarkUnicodeCodeblock() {
   return function transform(tree) {
     visit(tree, "code", (node: Code) => {
+      if (typeof node.lang === "string" && node.lang.toLowerCase() === "raw") return;
       node.value = toMonospace(node.value);
       node.lang = null;
       node.meta = null;

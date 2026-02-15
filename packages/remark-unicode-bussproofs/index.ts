@@ -34,7 +34,7 @@ const remarkUnicodeBussproofs: Plugin<[], Root> = function remarkUnicodeBussproo
         const wrapped = ensureProoftreeWrapper(source);
         const rendered = renderBussproofs(wrapped);
         node.value = rendered;
-        node.lang = "";
+        node.lang = "raw";
         node.meta = null;
         return;
       }
@@ -45,7 +45,7 @@ const remarkUnicodeBussproofs: Plugin<[], Root> = function remarkUnicodeBussproo
         if (!hasTree) return;
 
         const rendered = renderBussproofs(source);
-        const code: Code = { type: "code", value: rendered, lang: "", meta: null };
+        const code: Code = { type: "code", value: rendered, lang: "raw", meta: null };
         parentWithChildren.children[index] = code;
       }
     });

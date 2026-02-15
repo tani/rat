@@ -33,8 +33,8 @@ $$
       .process(input),
   );
 
-  expect(out).toContain("```\n");
-  expect(out).toContain("```\n");
+  expect(out).toContain("```raw\n");
+  expect(out).toContain("\n```\n");
   expect(out).not.toContain("$$");
 });
 
@@ -56,7 +56,7 @@ $$
       .process(input),
   );
 
-  expect(out).toContain("```\n");
+  expect(out).toContain("```raw\n");
   expect(out).toContain("≤ft( x");
   expect(out).not.toContain("$$");
 });

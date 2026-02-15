@@ -27,7 +27,8 @@ const remarkUnicodeMermaid: Plugin<[RemarkUnicodeMermaidOptions?], Root> =
             .then(() => render(original))
             .then((output) => {
               node.value = output;
-              node.lang = "";
+              node.lang = "raw";
+              node.meta = null;
             })
             .catch(() => {
               node.value = original;

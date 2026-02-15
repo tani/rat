@@ -18,4 +18,19 @@ describe("remark-unicode-codeblock", () => {
     expect(out).toContain("𝙰𝚋𝚌𝟷𝟸𝟹 +-*/");
     expect(out).not.toContain("```txt");
   });
+
+  test("skips conversion for raw code blocks", async () => {
+    const input = "```raw\nAbc123 +-*/\n```\n";
+    const out = String(
+      await unified()
+        .use(remarkParse)
+        .use(remarkUnicodeCodeblock)
+        .use(remarkStringify, { fences: true })
+        .process(input),
+    );
+
+    expect(out).toContain("```raw");
+    expect(out).toContain("Abc123 +-*/");
+    expect(out).not.toContain("𝙰𝚋𝚌𝟷𝟸𝟹");
+  });
 });
