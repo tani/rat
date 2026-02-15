@@ -1,19 +1,72 @@
 # rat
 
-`rat` renders Markdown to plain text/Unicode output and provides a Vim/Neovim live preview plugin over JSON-RPC (stdio).
+Render Markdown or LaTeX into terminal-friendly Unicode text.
+
+`rat` is a small CLI for readable plain-text previews, plus a Vim/Neovim plugin with live JSON-RPC rendering.
+
+## Features
+
+- Markdown to Unicode/plain-text output
+- LaTeX to Unicode/plain-text output
+- Works with files or stdin
+- JSON-RPC mode for editor integrations
+- Vim/Neovim live preview plugin included
+
+## Install
+
+### Option 1: Download a prebuilt binary
+
+macOS (Apple Silicon):
+
+```bash
+mkdir -p ~/.local/bin
+curl -fL https://github.com/tani/rat/releases/download/nightly/rat-darwin-arm64 -o ~/.local/bin/rat
+chmod +x ~/.local/bin/rat
+```
+
+Linux x64:
+
+```bash
+mkdir -p ~/.local/bin
+curl -fL https://github.com/tani/rat/releases/download/nightly/rat-linux-x64 -o ~/.local/bin/rat
+chmod +x ~/.local/bin/rat
+```
+
+If needed, add this to your shell profile:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Verify:
+
+```bash
+rat --help
+```
+
+### Option 2: Build from source
+
+Requirements: `bun`
+
+```bash
+git clone https://github.com/tani/rat.git
+cd rat
+bun install
+bun run compile
+```
 
 ## Quick Start
 
 Render Markdown from stdin:
 
 ```bash
-echo "# Hello\n\n*world*" | ./rat
+echo "# Hello\n\n*world*" | rat
 ```
 
 Render Markdown from a file:
 
 ```bash
-./rat examples/EXAMPLE.md
+rat examples/EXAMPLE.md
 ```
 
 Render LaTeX from stdin:
@@ -25,33 +78,50 @@ echo 'Term: \(\alpha^2 + \beta\)' | rat --language=latex
 Render LaTeX from a file:
 
 ```bash
-./rat --language=latex examples/EXAMPLE.tex
+rat --language=latex examples/EXAMPLE.tex
 ```
 
-Run JSON-RPC mode (used by the Vim plugin):
+Language options:
+
+- `--language=markdown` (default)
+- `--language=latex`
+- Also accepted: `--language markdown` / `--language latex`
+- Backward compatibility: `--latex`
+
+## Vim/Neovim Plugin
+
+Install with `vim-plug`:
+
+```vim
+Plug 'tani/rat', { 'rtp': 'vim/' }
+```
+
+Commands:
+
+- `:RatOpen`
+- `:RatClose`
+- `:RatToggle`
+
+Behavior:
+
+- Live preview updates on edit (`TextChanged`, `TextChangedI`)
+- Cursor sync to preview (`CursorMoved`, `CursorMovedI`)
+- Sends JSON-RPC `params.language` automatically:
+  - `latex` for `tex`, `plaintex`, `latex`
+  - `markdown` for everything else
+
+## JSON-RPC
+
+Start server mode:
 
 ```bash
 rat --json-rpc
 ```
 
-## CLI Language Mode
+Supported methods:
 
-`rat` supports language selection with:
-
-- `--language=markdown`
-- `--language=latex`
-
-You can also use `--language markdown` / `--language latex`.
-If omitted, default is `markdown`.
-
-## JSON-RPC
-
-`render` accepts `params.language`:
-
-- `"markdown"` (default): returns `{ text, sourcemap, previewLine }`
-- `"latex"`: returns `{ text, sourcemap, previewLine }`
-
-This is a breaking change: `markdown` is no longer returned in JSON-RPC responses.
+- `render` with `params: { text, cursor?, language? }`
+- `shutdown`
 
 Example request:
 
@@ -65,53 +135,7 @@ Example response:
 {"jsonrpc":"2.0","id":1,"result":{"text":"A: α+β","sourcemap":{"version":2,"segments":[{"nodeType":"inlineMath","output":{"start":{"line":1,"column":4},"end":{"line":1,"column":8}},"input":{"start":{"line":1,"column":4},"end":{"line":1,"column":17}}}]},"previewLine":1}}
 ```
 
-## Download
-
-Download binaries from GitHub Releases (`nightly` tag):
-
-```bash
-mkdir -p ~/.local/bin
-curl -fL https://github.com/tani/rat/releases/download/nightly/rat-darwin-arm64 -o ~/.local/bin/rat
-chmod +x ~/.local/bin/rat
-rat --help
-```
-
-Linux x64 example:
-
-```bash
-mkdir -p ~/.local/bin
-curl -fL https://github.com/tani/rat/releases/download/nightly/rat-linux-x64 -o ~/.local/bin/rat
-chmod +x ~/.local/bin/rat
-rat --help
-```
-
-If `rat` is not found, add this to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-## Vim/Neovim Plugin
-
-```vim
-Plug 'tani/rat', { rtp: 'vim/' }
-```
-
-Commands:
-
-- `:RatOpen`
-- `:RatClose`
-- `:RatToggle`
-
-Behavior:
-
-- Live preview updates without save (`TextChanged`, `TextChangedI`)
-- Cursor sync from source buffer to preview (`CursorMoved`, `CursorMovedI`)
-- Sends `params.language` automatically:
-  - `latex` for `filetype` `tex`/`plaintex`/`latex`
-  - `markdown` for all other filetypes
-
-## Development Commands
+## Development
 
 ```bash
 bun test
@@ -120,3 +144,7 @@ bun run lint
 bun run typecheck
 bun run format:check
 ```
+
+## License
+
+MIT. See `LICENSE`.

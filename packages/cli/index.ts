@@ -180,16 +180,6 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
   });
 }
 
-async function handleRenderLatexRequest(id: JsonRpcId, paramsValue: unknown): Promise<void> {
-  const params = parseRenderParams(paramsValue);
-  if (!params) {
-    writeJsonRpcError(id ?? null, -32602, "Invalid params");
-    return;
-  }
-  const rendered = await renderLatex(params.text);
-  writeJsonRpcResult(id, { text: rendered.text, sourcemap: rendered.sourcemap });
-}
-
 function handleShutdownRequest(id: JsonRpcId): void {
   writeJsonRpcResult(id, null);
   process.exit(0);
@@ -203,11 +193,6 @@ async function handleJsonRpcRequest(request: JsonRpcRequest): Promise<void> {
 
   if (request.method === "render") {
     await handleRenderRequest(request.id ?? null, request.params);
-    return;
-  }
-
-  if (request.method === "renderLatex") {
-    await handleRenderLatexRequest(request.id ?? null, request.params);
     return;
   }
 
