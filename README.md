@@ -1,5 +1,8 @@
 # rat
 
+<img width="1802" height="1111" alt="image" src="https://github.com/user-attachments/assets/c9589cb4-8107-4b62-a1e1-8b8f4109f95f" />
+
+It’s not a cat, not a bat, but rat: your terminal’s new best friend.
 `rat` stands for **Render All Text** (at least, that is one way to read it): a lightweight CLI that turns Markdown and LaTeX into terminal-friendly Unicode text, with a Vim/Neovim plugin for live JSON-RPC rendering.
 
 For best Unicode glyph rendering in terminals and editors, JuliaMono is recommended.
