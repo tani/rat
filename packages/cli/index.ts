@@ -114,7 +114,8 @@ function cursorToOffset(text: string, cursor: Cursor): number {
   const lineIndex = Math.min(Math.max(0, cursor.line - 1), lineStarts.length - 1);
   const lineStart = lineStarts[lineIndex] ?? 0;
   const nextLineStart = lineStarts[lineIndex + 1] ?? text.length;
-  const lineEnd = nextLineStart > 0 && text[nextLineStart - 1] === "\n" ? nextLineStart - 1 : nextLineStart;
+  const lineEnd =
+    nextLineStart > 0 && text[nextLineStart - 1] === "\n" ? nextLineStart - 1 : nextLineStart;
   return Math.min(lineStart + Math.max(0, cursor.column - 1), lineEnd);
 }
 
@@ -160,7 +161,9 @@ async function handleRenderRequest(id: JsonRpcId, paramsValue: unknown): Promise
 
   if (params.language === "latex") {
     const rendered = await renderLatex(params.text);
-    const previewLine = params.cursor ? resolvePreviewLine(params.text, rendered.text, params.cursor) : null;
+    const previewLine = params.cursor
+      ? resolvePreviewLine(params.text, rendered.text, params.cursor)
+      : null;
     writeJsonRpcResult(id, {
       text: rendered.text,
       previewLine,
