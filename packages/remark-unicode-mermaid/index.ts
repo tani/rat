@@ -7,39 +7,40 @@ export interface RemarkUnicodeMermaidOptions {
   render?: (source: string) => string | Promise<string>;
 }
 
-function isMermaidCode(node: Code): boolean {
-  return typeof node.lang === "string" && node.lang.toLowerCase() === "mermaid";
+function preprocess(source: string): string {
+  return source
+    .replace(
+      /(\b[\w-]*\w)\s*(?:\[{2}[\s\S]*?\]{2}|\[[\s\S]*?\]|\({2}[\s\S]*?\){2}|\([\s\S]*?\)|\{{2}[\s\S]*?\}\}|\{[\s\S]*?\}|>[\s\S]*?\])/g,
+      "$1",
+    )
+    .replace(/(participant|actor)\s+([\w-]+)\s+as\s+[^\n]+/gi, "$1 $2");
 }
 
-const remarkUnicodeMermaid: Plugin<[RemarkUnicodeMermaidOptions?], Root> =
-  function remarkUnicodeMermaid(options = {}) {
-    const render = options.render ?? ((source: string) => renderMermaidAscii(source));
+const remarkUnicodeMermaid: Plugin<[RemarkUnicodeMermaidOptions?], Root> = (options = {}) => {
+  const render = options.render ?? renderMermaidAscii;
 
-    return async function transform(tree) {
-      const tasks: Promise<void>[] = [];
+  return async (tree) => {
+    const tasks: Promise<void>[] = [];
 
-      visit(tree, "code", (node: Code) => {
-        if (!isMermaidCode(node)) return;
+    visit(tree, "code", (node: Code) => {
+      if (node.lang?.toLowerCase() !== "mermaid") return;
 
-        const original = node.value;
-        tasks.push(
-          Promise.resolve()
-            .then(() => render(original))
-            .then((output) => {
-              node.value = output;
-              node.lang = "raw";
-              node.meta = null;
-            })
-            .catch(() => {
-              node.value = original;
-            }),
-        );
-      });
+      const original = node.value;
+      tasks.push(
+        (async () => {
+          try {
+            node.value = await render(preprocess(original));
+            node.lang = "raw";
+            node.meta = null;
+          } catch {
+            node.value = original;
+          }
+        })(),
+      );
+    });
 
-      if (tasks.length > 0) {
-        await Promise.all(tasks);
-      }
-    };
+    await Promise.all(tasks);
   };
+};
 
 export default remarkUnicodeMermaid;

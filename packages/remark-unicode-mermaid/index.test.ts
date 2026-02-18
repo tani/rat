@@ -61,3 +61,34 @@ A-->B
   expect(out).toContain("flowchart LR");
   expect(out).toContain("A-->B");
 });
+
+test("remark-unicode-mermaid: strips node labels from mermaid source code", async () => {
+  const input = `
+\`\`\`mermaid
+flowchart LR
+A[Input markdown] --> B(Parse mdast)
+participant U as User
+\`\`\`
+`;
+
+  let renderedSource = "";
+  const out = String(
+    await unified()
+      .use(remarkParse)
+      .use(remarkUnicodeMermaid, {
+        render(source) {
+          renderedSource = source;
+          return "rendered";
+        },
+      })
+      .use(remarkStringify)
+      .process(input),
+  );
+
+  expect(renderedSource).toContain("A --> B");
+  expect(renderedSource).not.toContain("[Input markdown]");
+  expect(renderedSource).not.toContain("(Parse mdast)");
+  expect(renderedSource).toContain("participant U");
+  expect(renderedSource).not.toContain("as User");
+  expect(out).toContain("rendered");
+});
