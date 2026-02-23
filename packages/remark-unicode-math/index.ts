@@ -1,7 +1,6 @@
 import * as arktype from "arktype";
 import { createRender } from "libtexprintf";
 import wasmPath from "libtexprintf/libtexprintf.wasm" with { type: "file" };
-import memoizeOne from "memoize-one";
 import { WASI } from "node:wasi";
 import unicodeit from "unicodeit";
 import type { Code, InlineCode, Root } from "mdast";
@@ -12,24 +11,16 @@ export interface RemarkUnicodeMathOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
-type LibtexprintfRenderer = (latex: string) => string;
-
 const wasi = new WASI({ version: "preview1" });
-
-async function loadInstance(): Promise<WebAssembly.Instance> {
-  const wasmBytes = await Bun.file(wasmPath).arrayBuffer();
-  const { instance } = await WebAssembly.instantiate(wasmBytes, {
-    wasi_snapshot_preview1: wasi.wasiImport,
-  });
-  return instance;
-}
-
-const getCachedLibtexprintfRenderer = memoizeOne(async (): Promise<LibtexprintfRenderer> => {
-  const instance = await loadInstance();
-  const render = createRender(instance);
-
-  return (latex: string) => render(latex).output;
+const wasmBytes = await Bun.file(wasmPath).arrayBuffer();
+const { instance: libtexprintfInstance } = await WebAssembly.instantiate(wasmBytes, {
+  wasi_snapshot_preview1: wasi.wasiImport,
 });
+const renderLibtexprintf = createRender(libtexprintfInstance);
+
+function libtexprintfRenderer(latex: string): string {
+  return renderLibtexprintf(latex).output;
+}
 
 const ParentWithChildrenSchema = arktype.type({
   children: "unknown[]",
@@ -56,9 +47,7 @@ async function displayToUnicode(
   displayRenderer?: (latex: string) => string | Promise<string>,
 ): Promise<string> {
   try {
-    const output = displayRenderer
-      ? await displayRenderer(value)
-      : (await getCachedLibtexprintfRenderer())(value);
+    const output = displayRenderer ? await displayRenderer(value) : libtexprintfRenderer(value);
     if (isLikelyFailedLibtexprintf(value, output)) {
       return unicodeit.replace(value);
     }
