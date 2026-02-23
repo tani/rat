@@ -1,6 +1,8 @@
-import { getLibtexprintfRenderer } from "@rat/bun-libtexprintf";
 import { renderBussproofs } from "@rat/bussproofs-unicode";
+import { createRender } from "libtexprintf";
+import wasmPath from "libtexprintf/libtexprintf.wasm" with { type: "file" };
 import memoizeOne from "memoize-one";
+import { WASI } from "node:wasi";
 import unicodeit from "unicodeit";
 import { type InlineStyle, stylizeMath } from "./style";
 
@@ -24,7 +26,24 @@ export interface RenderLatexOptions {
   displayRenderer?: (latex: string) => string | Promise<string>;
 }
 
-const getCachedLibtexprintfRenderer = memoizeOne(getLibtexprintfRenderer);
+type LibtexprintfRenderer = (latex: string) => string;
+
+const wasi = new WASI({ version: "preview1" });
+
+async function loadInstance(): Promise<WebAssembly.Instance> {
+  const wasmBytes = await Bun.file(wasmPath).arrayBuffer();
+  const { instance } = await WebAssembly.instantiate(wasmBytes, {
+    wasi_snapshot_preview1: wasi.wasiImport,
+  });
+  return instance;
+}
+
+const getCachedLibtexprintfRenderer = memoizeOne(async (): Promise<LibtexprintfRenderer> => {
+  const instance = await loadInstance();
+  const render = createRender(instance);
+
+  return (latex: string) => render(latex).output;
+});
 
 const INLINE_COMMANDS: readonly { cmd: string; style: InlineStyle }[] = [
   { cmd: "\\textbf", style: "bold" },

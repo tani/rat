@@ -8,7 +8,6 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/dist/**",
       "**/.mdd-cache/**",
-      "packages/bun-libtexprintf/libtexprintf/**",
       "eslint.config.mjs",
     ],
   },

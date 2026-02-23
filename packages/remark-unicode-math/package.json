@@ -8,8 +8,8 @@
     ".": "./index.ts"
   },
   "dependencies": {
-    "@rat/bun-libtexprintf": "workspace:*",
     "arktype": "^2.1.29",
+    "libtexprintf": "^1.30.0",
     "memoize-one": "^6.0.0",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",

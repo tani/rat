@@ -19,13 +19,6 @@
         "typescript-eslint": "^8.24.1",
       },
     },
-    "packages/bun-libtexprintf": {
-      "name": "@rat/bun-libtexprintf",
-      "version": "0.0.0",
-      "dependencies": {
-        "memoize-one": "^6.0.0",
-      },
-    },
     "packages/bussproofs-unicode": {
       "name": "@rat/bussproofs-unicode",
       "version": "0.0.0",
@@ -51,8 +44,8 @@
       "name": "@rat/latex-unicode",
       "version": "0.0.0",
       "dependencies": {
-        "@rat/bun-libtexprintf": "workspace:*",
         "@rat/bussproofs-unicode": "workspace:*",
+        "libtexprintf": "^1.30.0",
         "memoize-one": "^6.0.0",
         "unicodeit": "^0.7.5",
       },
@@ -115,8 +108,8 @@
       "name": "@rat/remark-unicode-math",
       "version": "0.0.0",
       "dependencies": {
-        "@rat/bun-libtexprintf": "workspace:*",
         "arktype": "^2.1.29",
+        "libtexprintf": "^1.30.0",
         "memoize-one": "^6.0.0",
         "remark-math": "^6.0.0",
         "remark-parse": "^11.0.0",
@@ -240,8 +233,6 @@
     "@oxfmt/binding-win32-ia32-msvc": ["@oxfmt/binding-win32-ia32-msvc@0.32.0", "", { "os": "win32", "cpu": "ia32" }, "sha512-H/9gsuqXmceWMsVoCPZhtJG2jLbnBeKr7xAXm2zuKpxLVF7/2n0eh7ocOLB6t+L1ARE76iORuUsRMnuGjj8FjQ=="],
 
     "@oxfmt/binding-win32-x64-msvc": ["@oxfmt/binding-win32-x64-msvc@0.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-fF8VIOeligq+mA6KfKvWtFRXbf0EFy73TdR6ZnNejdJRM8VWN1e3QFhYgIwD7O8jBrQsd7EJbUpkAr/YlUOokg=="],
-
-    "@rat/bun-libtexprintf": ["@rat/bun-libtexprintf@workspace:packages/bun-libtexprintf"],
 
     "@rat/bussproofs-unicode": ["@rat/bussproofs-unicode@workspace:packages/bussproofs-unicode"],
 
@@ -438,6 +429,8 @@
     "keyv": ["keyv@4.5.4", "", { "dependencies": { "json-buffer": "3.0.1" } }, "sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw=="],
 
     "levn": ["levn@0.4.1", "", { "dependencies": { "prelude-ls": "^1.2.1", "type-check": "~0.4.0" } }, "sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ=="],
+
+    "libtexprintf": ["libtexprintf@1.30.0", "", {}, "sha512-pZ+65UDfxVMlf+DDYntkqd0aoJsWCUb49Fx6fGxR3VnU0/+2IwRicpM6nVLvdS0U+R7lDTv7k/QPsMfftb0gbw=="],
 
     "locate-path": ["locate-path@6.0.0", "", { "dependencies": { "p-locate": "^5.0.0" } }, "sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw=="],
 

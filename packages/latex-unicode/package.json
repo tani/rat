@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@rat/bussproofs-unicode": "workspace:*",
-    "@rat/bun-libtexprintf": "workspace:*",
+    "libtexprintf": "^1.30.0",
     "memoize-one": "^6.0.0",
     "unicodeit": "^0.7.5"
   }
